@@ -1,5 +1,4 @@
-define(['exports', 'module', './ComponentView'], function(exports, module, ComponentView) {
+define(['./ComponentView'], function (ComponentView) {
     'use strict';
-
-    module.exports = ComponentView.extend({});
+    return ComponentView.extend({});
 });
