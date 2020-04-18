@@ -1,5 +1,5 @@
 define([
-    'domain_abstract/view/DomainViews',
+    '../../domain_abstract/view/DomainViews',
     './TraitView',
     './TraitSelectView',
     './TraitCheckboxView',

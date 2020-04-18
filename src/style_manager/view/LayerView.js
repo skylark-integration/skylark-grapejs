@@ -75,7 +75,7 @@ define([
             const lim = 3;
             const result = [];
             const resultObj = {};
-            this.model.get('properties').undefined((prop, index) => {
+            this.model.get('properties').each((prop, index) => {
                 const property = prop.get('property');
                 let value = detach ? prop.getFullValue() : values[index] || '';
                 if (value) {

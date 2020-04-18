@@ -22,7 +22,7 @@ define([
             this.getHighlighterEl().addClass(this.hoverClass);
             var wp = this.$wrapper;
             wp.css('cursor', 'move');
-            wp.undefined('mousedown', this.initSorter);
+            wp.on('mousedown', this.initSorter);
             wp.addClass(this.noSelClass);
         },
         toggleClipboard() {
@@ -37,7 +37,7 @@ define([
             this.sorter.draggable = drag;
             this.sorter.onEndMove = this.onEndMove.bind(this);
             this.stopSelectComponent();
-            this.$wrapper.undefined('mousedown', this.initSorter);
+            this.$wrapper.on('mousedown', this.initSorter);
             b.on(this.getContentWindow(), 'keydown', this.rollback);
         },
         initSorterFromModel(model) {

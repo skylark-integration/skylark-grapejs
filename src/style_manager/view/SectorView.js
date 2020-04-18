@@ -60,7 +60,7 @@ define([
             const {pfx, model, em, $el} = this;
             const {id, name} = model.attributes;
             const label = em && em.t(`styleManager.sectors.${ id }`) || name;
-            $el.html(this.undefined({
+            $el.html(this.template({
                 pfx,
                 label
             }));

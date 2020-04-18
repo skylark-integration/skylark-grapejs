@@ -1,0 +1,9 @@
+/**
+ * skylark-grapejs - A version of garpejs that ported to running on skylarkjs
+ * @author Hudaokeji, Inc.
+ * @version v0.9.0
+ * @link https://github.com/skylark-integration/skylark-grapejs/
+ * @license MIT
+ */
+define(["skylark-langx/langx","skylark-backbone","../../domain_abstract/model/TypeableCollection","./Property","./PropertyStack","./../view/PropertyStackView","./PropertyComposite","./../view/PropertyCompositeView","./../view/PropertyFileView","./../view/PropertyColorView","./PropertySelect","./../view/PropertySelectView","./PropertyRadio","./../view/PropertyRadioView","./PropertySlider","./../view/PropertySliderView","./PropertyInteger","./../view/PropertyIntegerView","./../view/PropertyView"],function(e,i,t,r,o,p,l,y,s,n,d,a,w,c,u,v,m,P,V){"use strict";return i.Collection.extend(t).extend({types:[{id:"stack",model:o,view:p,isType(e){if(e&&"stack"==e.type)return e}},{id:"composite",model:l,view:y,isType(e){if(e&&"composite"==e.type)return e}},{id:"file",model:r,view:s,isType(e){if(e&&"file"==e.type)return e}},{id:"color",model:r,view:n,isType(e){if(e&&"color"==e.type)return e}},{id:"select",model:d,view:a,isType(e){if(e&&"select"==e.type)return e}},{id:"radio",model:w,view:c,isType(e){if(e&&"radio"==e.type)return e}},{id:"slider",model:u,view:v,isType(e){if(e&&"slider"==e.type)return e}},{id:"integer",model:m,view:P,isType(e){if(e&&"integer"==e.type)return e}},{id:"base",model:r,view:V,isType:e=>(e.type="base",e)}],deepClone(){const e=this.clone();return e.reset(e.map(e=>{const i=e.clone();return i.typeView=e.typeView,i})),e},parseValue(i){const t=[];return i.split(" ").forEach((i,r)=>{const o=this.at(r);o&&t.push(e.mixin({},o.attributes,{value:i}))}),t},getFullValue(){let e="";return this.each(i=>e+=`${i.getFullValue()} `),e.trim()}})});
+//# sourceMappingURL=../../sourcemaps/style_manager/model/Properties.js.map

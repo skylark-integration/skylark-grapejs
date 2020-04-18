@@ -3,7 +3,7 @@ define([
     'skylark-backbone'
 ], function (a, Backbone) {
     'use strict';
-    return Backbone.Model.undefined({
+    return Backbone.Model.extend({
         mapModel(model) {
             var code = '';
             var script = model.get('script-export') || model.get('script');

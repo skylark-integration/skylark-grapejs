@@ -4,8 +4,8 @@ define([
     './model/CssRule',
     './model/CssRules',
     './view/CssRulesView',
-    '../../selector_manager/model/Selectors',
-    '../../selector_manager/model/Selector'
+    '../selector_manager/model/Selectors',
+    '../selector_manager/model/Selector'
 ], function (a, defaults, CssRule, CssRules, CssRulesView, Selectors, Selector) {
     'use strict';
     return () => {

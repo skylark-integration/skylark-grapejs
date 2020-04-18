@@ -1,0 +1,9 @@
+/**
+ * skylark-grapejs - A version of garpejs that ported to running on skylarkjs
+ * @author Hudaokeji, Inc.
+ * @version v0.9.0
+ * @link https://github.com/skylark-integration/skylark-grapejs/
+ * @license MIT
+ */
+define(["skylark-backbone"],function(t){"use strict";const e=t.$;return{startSelectPosition(t,e,s={}){this.isPointed=!1;var i=this.editorModel.get("Utils");const o=t.ownerDocument.body;i&&!this.sorter&&(this.sorter=new i.Sorter({container:o,placer:this.canvas.getPlacerEl(),containerSel:"*",itemSel:"*",pfx:this.ppfx,direction:"a",document:e,wmargin:1,nested:1,em:this.editorModel,canvasRelative:1,scale:()=>this.em.getZoomDecimal()})),s.onStart&&(this.sorter.onStart=s.onStart),t&&this.sorter.startSort(t,{container:o})},getOffsetDim(){var t=this.offset(this.canvas.getFrameEl()),e=this.offset(this.canvas.getElement());return{top:t.top-e.top,left:t.left-e.left}},stopSelectPosition(){this.posTargetCollection=null,this.posIndex="after"==this.posMethod&&0!==this.cDim.length?this.posIndex+1:this.posIndex,this.sorter&&(this.sorter.moved=0,this.sorter.endMove()),this.cDim&&(this.posIsLastEl=0!==this.cDim.length&&"after"==this.posMethod&&this.posIndex==this.cDim.length,this.posTargetEl=0===this.cDim.length?e(this.outsideElem):!this.posIsLastEl&&this.cDim[this.posIndex]?e(this.cDim[this.posIndex][5]).parent():e(this.outsideElem),this.posTargetModel=this.posTargetEl.data("model"),this.posTargetCollection=this.posTargetEl.data("model-comp"))},enable(){this.startSelectPosition()},nearFloat(t,e,s){var i=t||0,o=e||"before",r=s.length,n=0!==r&&"after"==o&&i==r;return 0!==r&&(!n&&!s[i][4]||s[i-1]&&!s[i-1][4]||n&&!s[i-1][4])?1:0},run(){this.enable()},stop(){this.stopSelectPosition(),this.$wrapper.css("cursor",""),this.$wrapper.unbind()}}});
+//# sourceMappingURL=../../sourcemaps/commands/view/SelectPosition.js.map

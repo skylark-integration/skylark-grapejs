@@ -1,7 +1,7 @@
 define([
     "skylark-langx/langx",
     'skylark-underscore',
-    '../../utils/mixins',
+    '../utils/mixins',
     './config/config',
     './model/Selector',
     './model/Selectors',
@@ -21,7 +21,7 @@ define([
                 return c;
             },
             init(conf = {}) {
-                c = langx.mxinin({},defaults,conf);
+                c = {...defaults,...conf};
                 const em = c.em;
                 const ppfx = c.pStylePrefix;
                 this.em = em;
@@ -50,7 +50,7 @@ define([
                 }
             },
             select(value, opts = {}) {
-                const targets = Array.undefined(value) ? value : [value];
+                const targets = Array.isArray(value) ? value : [value];
                 const toSelect = this.em.get('StyleManager').setTarget(targets, opts);
                 const res = toSelect.filter(i => i).map(sel => b.isComponent(sel) ? sel : b.isRule(sel) && !sel.get('selectorsAdd') ? sel : sel.getSelectorsString());
                 this.selectorTags.componentChanged({ targets: res });

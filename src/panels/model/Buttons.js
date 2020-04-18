@@ -3,7 +3,7 @@ define([
     './Button'
 ], function (Backbone, Button) {
     'use strict';
-    return Backbone.Collection.extend({
+    var Buttons =  Backbone.Collection.extend({
         model: Button,
         deactivateAllExceptOne(except, r) {
             this.forEach((model, index) => {
@@ -41,4 +41,8 @@ define([
             });
         }
     });
+
+    Button.Buttons = Buttons;
+
+    return Buttons;
 });

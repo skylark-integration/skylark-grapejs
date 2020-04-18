@@ -4,7 +4,7 @@ define([
     'skylark-codemirror',
     'skylark-codemirror/mode/htmlmixed/htmlmixed',
     'skylark-codemirror/mode/css/css',
-    './formatting'
+    './formating'
 ], function (a, Backbone, CodeMirror) {
     'use strict';
     return Backbone.Model.extend({

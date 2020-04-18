@@ -5,10 +5,17 @@ define([
     'skylark-underscore',
     './utils/polyfills',
     './plugin_manager/index'
-], function (langx,$, Editor, _, polyfills, PluginManager) {
+], function (
+    langx,
+    $, 
+    startEditor, 
+    _, 
+    polyfills, 
+    pluginsInit
+) {
     'use strict';
     polyfills();
-    const plugins = new PluginManager();
+    const plugins = pluginsInit();
     const editors = [];
     const defaultConfig = {
         autorender: 1,
@@ -29,7 +36,7 @@ define([
                 config
             );
             config.el = _.isElement(els) ? els : document.querySelector(els);
-            const editor = new Editor(config).init();
+            const editor = startEditor(config).init();
             config.plugins.forEach(pluginId => {
                 let plugin = plugins.get(pluginId);
                 const plgOptions = config.pluginsOpts[pluginId] || {};

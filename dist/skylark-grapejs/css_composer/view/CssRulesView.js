@@ -1,0 +1,9 @@
+/**
+ * skylark-grapejs - A version of garpejs that ported to running on skylarkjs
+ * @author Hudaokeji, Inc.
+ * @version v0.9.0
+ * @link https://github.com/skylark-integration/skylark-grapejs/
+ * @license MIT
+ */
+define(["skylark-backbone","./CssRuleView","./CssGroupRuleView"],function(e,t,i){"use strict";const s=e.$,n=(e,t)=>`${e}${t?`-${parseFloat(t)}`:""}`;return e.View.extend({initialize(e){const t=e.config||{};this.atRules={},this.config=t,this.em=t.em,this.pfx=t.stylePrefix||"",this.className=this.pfx+"rules";const i=this.collection;this.listenTo(i,"add",this.addTo),this.listenTo(i,"reset",this.render)},addTo(e){this.addToCollection(e)},addToCollection(e,s){if(!this.renderStarted)return;const l=s||null,{config:o}=this,a={model:e,config:o};let d,r;if("keyframes"===e.get("atRuleType")){const t=e.getAtRule();let s=this.atRules[t];if(!s){const e=document.createElement("style");s=document.createTextNode(""),e.appendChild(document.createTextNode(`${t}{`)),e.appendChild(s),e.appendChild(document.createTextNode("}")),this.atRules[t]=s,d=e}r=new i(a),s.appendData(r.render().el.textContent)}else d=(r=new t(a)).render().el;const c=this.className,h=e.get("mediaText"),u=n(c);let p=u;if(h&&(p=n(c,this.getMediaWidth(h))),d){const e=l||this.el;let t;try{t=e.querySelector(`#${p}`)}catch(e){}t||(t=e.querySelector(`#${u}`)),t.appendChild(d)}return d},getMediaWidth(e){return e&&e.replace(`(${this.em.getConfig("mediaCondition")}: `,"").replace(")","")},render(){this.renderStarted=1,this.atRules={};const{em:e,$el:t,className:i,collection:l}=this,o=document.createDocumentFragment();t.empty();const a=e.get("DeviceManager").getAll().pluck("priority");return a.every(e=>e)&&a.unshift(0),a.forEach(e=>s(`<div id="${n(i,e)}"></div>`).appendTo(o)),l.each(e=>this.addToCollection(e,o)),t.append(o),t.attr("class",i),this}})});
+//# sourceMappingURL=../../sourcemaps/css_composer/view/CssRulesView.js.map

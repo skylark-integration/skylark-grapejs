@@ -15,7 +15,7 @@ define([
                     var coll = obj;
                     json[attr] = [];
                     if (coll.length) {
-                        coll.undefined(function (el, index) {
+                        coll.each(function (el, index) {
                             json[attr][index] = this.build(el);
                         }, this);
                     }

@@ -1,10 +1,9 @@
 define([
     'skylark-backbone',
-    './ItemView',
     '../../dom_components/model/Component'
-], function (Backbone, ItemView, a) {
+], function (Backbone, a) {
     'use strict';
-    return Backbone.View.extend({
+    var ItemsView =  Backbone.View.extend({
         initialize(o = {}) {
             this.opt = o;
             const config = o.config || {};
@@ -59,7 +58,7 @@ define([
         addToCollection(model, fragmentEl, index) {
             const {level, parentView} = this;
             var fragment = fragmentEl || null;
-            var viewObject = ItemView;
+            var viewObject = ItemsView.ItemView;
             var view = new viewObject({
                 level,
                 model,
@@ -106,4 +105,6 @@ define([
             return this;
         }
     });
+
+    return ItemsView;
 });

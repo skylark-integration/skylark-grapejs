@@ -90,7 +90,8 @@ define([
             const fetchOpts = this.get('fetchOptions') || {};
             const addOpts = a.isFunction(fetchOpts) ? fetchOpts(fetchOptions) : fetchOptions;
             this.onStart();
-            this.fetch(url, langx.mixin({},fetchOptions,addOpts)).then(res => (res.status / 200 | 0) == 1 ? res.text() : res.text().then(text => Promise.reject(text))).then(text => this.onResponse(text, clb)).catch(err => this.onError(err, clbErr));
+            this.fetch(url, langx.mixin({},fetchOptions,addOpts)).then(
+                res => (res.status / 200 | 0) == 1 ? res.text() : res.text().then(text => Promise.reject(text))).then(text => this.onResponse(text, clb)).catch(err => this.onError(err, clbErr));
         }
     });
 });

@@ -182,24 +182,27 @@ define([
             const em = config.em;
             const {model} = this;
             const property = model.get('property');
-            const {
-                status,
-                value,
-                ...targetData
-            } = this._getTargetData();
-            this.setStatus(status);
-            model.setValue(value, 0, {
+            
+            //const {
+            //    status,
+            //    value,
+            //    ...targetData
+            //} = this._getTargetData();
+
+            const targetData = this._getTargetData()
+            this.setStatus(targetData.status);
+            model.setValue(targetData.value, 0, {
                 fromTarget: 1,
                 ...opts
             });
             if (em) {
                 const data = {
-                    status,
-                    value,
+                //    status,
+                //    value,
                     ...targetData
                 };
-                em.trigger('styleManager:change', this, property, value, data);
-                em.trigger(`styleManager:change:${ property }`, this, value, data);
+                em.trigger('styleManager:change', this, property, targetData.value, data);
+                em.trigger(`styleManager:change:${ property }`, this, targetData.value, data);
                 this._emitUpdate(data);
             }
         },
@@ -351,8 +354,8 @@ define([
             }
             if (sectors && requires) {
                 const properties = Object.keys(requires);
-                sectors.undefined(sector => {
-                    sector.get('properties').undefined(model => {
+                sectors.each(sector => {
+                    sector.get('properties').each(model => {
                         if (a.includes(properties, model.id)) {
                             const values = requires[model.id];
                             stylable = stylable && a.includes(values, model.get('value'));

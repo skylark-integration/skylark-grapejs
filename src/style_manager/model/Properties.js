@@ -17,10 +17,32 @@ define([
     './../view/PropertySliderView',
     './PropertyInteger',
     './../view/PropertyIntegerView',
-    './../view/PropertyView'
-], function (langx,Backbone, TypeableCollection, Property, PropertyStack, PropertyStackView, PropertyComposite, PropertyCompositeView, PropertyFileView, PropertyColorView, PropertySelect, PropertySelectView, PropertyRadio, PropertyRadioView, PropertySlider, PropertySliderView, PropertyInteger, PropertyIntegerView, PropertyView) {
+    './../view/PropertyView',
+    "./Layer"
+], function (
+    langx,
+    Backbone, 
+    TypeableCollection, 
+    Property, 
+    PropertyStack, 
+    PropertyStackView, 
+    PropertyComposite, 
+    PropertyCompositeView, 
+    PropertyFileView, 
+    PropertyColorView, 
+    PropertySelect, 
+    PropertySelectView, 
+    PropertyRadio, 
+    PropertyRadioView, 
+    PropertySlider, 
+    PropertySliderView, 
+    PropertyInteger, 
+    PropertyIntegerView, 
+    PropertyView,
+    Layer
+) {
     'use strict';
-    return Backbone.Collection.extend(TypeableCollection).extend({
+    var Properties = Backbone.Collection.extend(TypeableCollection).extend({
         types: [
             {
                 id: 'stack',
@@ -138,4 +160,11 @@ define([
             return result.trim();
         }
     });
+
+    PropertyComposite.Properties = Properties;
+
+    Layer.Properties = Properties;
+
+
+    return Properties;
 });

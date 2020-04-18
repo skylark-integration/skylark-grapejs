@@ -1,0 +1,1 @@
+{"version":3,"sources":["device_manager/config/config.js"],"names":["define","devices"],"mappings":";;;;;;;AAAAA,OAAO,WACH,aACA,OAASC","file":"../../../device_manager/config/config.js","sourcesContent":["define(function () {\n    'use strict';\n    return { devices: [] };\n});"]}

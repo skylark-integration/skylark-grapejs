@@ -1,5 +1,5 @@
 define([
-    'skylark-codemirror'
+    "skylark-codemirror/CodeMirror"
 ], function (CodeMirror) {
 
   CodeMirror.extendMode("css", {

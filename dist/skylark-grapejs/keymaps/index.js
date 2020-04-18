@@ -1,0 +1,9 @@
+/**
+ * skylark-grapejs - A version of garpejs that ported to running on skylarkjs
+ * @author Hudaokeji, Inc.
+ * @version v0.9.0
+ * @link https://github.com/skylark-integration/skylark-grapejs/
+ * @license MIT
+ */
+define(["skylark-langx/langx","skylark-underscore","./keymaster"],function(e,t,r){"use strict";return()=>{let n,o;const c={},s={defaults:{"core:undo":{keys:"⌘+z, ctrl+z",handler:"core:undo"},"core:redo":{keys:"⌘+shift+z, ctrl+shift+z",handler:"core:redo"},"core:copy":{keys:"⌘+c, ctrl+c",handler:"core:copy"},"core:paste":{keys:"⌘+v, ctrl+v",handler:"core:paste"},"core:component-next":{keys:"s",handler:"core:component-next"},"core:component-prev":{keys:"w",handler:"core:component-prev"},"core:component-enter":{keys:"d",handler:"core:component-enter"},"core:component-exit":{keys:"a",handler:"core:component-exit"},"core:component-delete":{keys:"backspace, delete",handler:"core:component-delete"}}};return{keymaster:r,name:"Keymaps",getConfig:()=>o,init(t={}){return o=e.mixin({},s,t),n=o.em,this.em=n,this},onLoad(){const e=o.defaults;for(let t in e){const r=e[t];this.add(t,r.keys,r.handler)}},add(e,n,o,s={}){const{em:a}=this,i=a.get("Commands"),d=a.getEditor(),l=a.get("Canvas"),m={id:e,keys:n,handler:o};return c[e]&&this.remove(e),c[e]=m,r(n,(r,n)=>{const c={event:r,h:n};if(o=t.isString(o)?i.get(o):o,s.prevent&&l.getCanvasView().preventDefault(r),!a.isEditing()&&!d.Canvas.isInputFocused()||s.force){"object"==typeof o?o.run(d,0,c):o(d,0,c);const t=[e,n.shortcut,r];a.trigger("keymap:emit",...t),a.trigger(`keymap:emit:${e}`,...t)}}),a.trigger("keymap:add",m),m},get:e=>c[e],getAll:()=>c,remove(e){const t=this.em,n=this.get(e);if(n)return delete c[e],r.unbind(n.keys),t&&t.trigger("keymap:remove",n),n},removeAll(){return Object.keys(c).forEach(e=>this.remove(e)),this}}}});
+//# sourceMappingURL=../sourcemaps/keymaps/index.js.map

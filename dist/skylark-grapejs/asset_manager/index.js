@@ -1,0 +1,9 @@
+/**
+ * skylark-grapejs - A version of garpejs that ported to running on skylarkjs
+ * @author Hudaokeji, Inc.
+ * @version v0.9.0
+ * @link https://github.com/skylark-integration/skylark-grapejs/
+ * @license MIT
+ */
+define(["./config/config","./model/Assets","./view/AssetsView","./view/FileUploader"],function(e,t,s,l){"use strict";return()=>{let r,i,o,n={};return{name:"AssetManager",storageKey:"assets",getConfig:()=>n,init(g){n=g||{};for(let t in e)t in n||(n[t]=e[t]);const a=n.pStylePrefix,c=n.em;a&&(n.stylePrefix=a+n.stylePrefix),r=new t([]);const d={collection:new t([]),globalCollection:r,config:n};return o=new l(d),d.fu=o,i=new s(d),r.listenTo(r,"add",e=>{this.getAllVisible().add(e),c&&c.trigger("asset:add",e)}),r.listenTo(r,"remove",e=>{this.getAllVisible().remove(e),c&&c.trigger("asset:remove",e)}),this},add:(e,t={})=>(void 0===t.at&&(t.at=0),r.add(e,t)),get:e=>r.where({src:e})[0],getAll:()=>r,getAllVisible:()=>i.collection,remove(e){var t=this.get(e);return this.getAll().remove(t),this},store(e){var t={},s=JSON.stringify(this.getAll().toJSON());return t[this.storageKey]=s,!e&&n.stm&&n.stm.store(t),t},load(e={}){const t=this.storageKey;let s=e[t]||[];if("string"==typeof s)try{s=JSON.parse(e[t])}catch(e){}return s&&s.length&&this.getAll().reset(s),s},getContainer:()=>i.el,getAssetsEl:()=>i.el.querySelector("[data-el=assets]"),render(e){const t=e||this.getAll().models;return i.rendered||i.render(),i.collection.reset(t),this.getContainer()},addType(e,t){this.getAll().addType(e,t)},getType(e){return this.getAll().getType(e)},getTypes(){return this.getAll().getTypes()},AssetsView:()=>i,FileUploader:()=>o,onLoad(){this.getAll().reset(n.assets)},postRender(e){n.dropzone&&o.initDropzone(e)},setTarget(e){i.collection.target=e},onSelect(e){i.collection.onSelect=e},onClick(e){n.onClick=e},onDblClick(e){n.onDblClick=e}}}});
+//# sourceMappingURL=../sourcemaps/asset_manager/index.js.map

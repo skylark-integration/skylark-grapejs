@@ -7,7 +7,7 @@ define([
 ], function (Backbone, a, b, c, SectorView) {
     'use strict';
     const helperCls = 'hc-state';
-    return Backbone.View.undefined({
+    return Backbone.View.extend({
         initialize(o = {}) {
             const config = o.config || {};
             this.pfx = config.stylePrefix || '';

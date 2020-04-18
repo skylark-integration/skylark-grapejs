@@ -4,12 +4,18 @@ define([
     'use strict';
     return Backbone.View.extend({
         events: { submit: 'handleSubmit' },
-        template({
-            pfx,
-            ppfx,
-            em,
-            ...view
-        }) {
+        //template({
+        //    pfx,
+        //    ppfx,
+        //    em,
+        //    ...view
+        //}) {
+        template() {
+            const {
+                pfx,
+                ppfx,
+                em
+            } = this;  // modified by lwf
             let form = '';
             if (this.config.showUrlInput) {
                 form = `

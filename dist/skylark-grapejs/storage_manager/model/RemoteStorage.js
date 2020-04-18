@@ -1,0 +1,9 @@
+/**
+ * skylark-grapejs - A version of garpejs that ported to running on skylarkjs
+ * @author Hudaokeji, Inc.
+ * @version v0.9.0
+ * @link https://github.com/skylark-integration/skylark-grapejs/
+ * @license MIT
+ */
+define(["skylark-langx/langx","skylark-backbone","../../utils/fetch","skylark-underscore"],function(e,t,s,n){"use strict";return t.Model.extend({fetch:s,defaults:{urlStore:"",urlLoad:"",params:{},beforeSend(){},onComplete(){},contentTypeJson:!1,credentials:"include",fetchOptions:""},onStart(){this.get("em");const e=this.get("beforeSend");e&&e()},onError(e,t){if(t)t(e);else{const t=this.get("em");console.error(e),t&&t.trigger("storage:error",e)}},onResponse(e,t){const s=this.get("em"),n=this.get("onComplete"),o=this.get("contentTypeJson")&&(e&&"string"==typeof e)?JSON.parse(e):e;n&&n(o),t&&t(o),s&&s.trigger("storage:response",o)},store(e,t,s){const n={};for(let t in e)n[t]=e[t];this.request(this.get("urlStore"),{body:n},t,s)},load(e,t,s){this.request(this.get("urlLoad"),{method:"get"},t,s)},request(t,s={},o=null,r=null){const i=this.get("contentTypeJson"),h=this.get("headers")||{},a=this.get("params"),l=s.body||{};let d,c;for(let e in a)l[e]=a[e];if(n.isUndefined(h["X-Requested-With"])&&(h["X-Requested-With"]="XMLHttpRequest"),n.isUndefined(h["Content-Type"])&&i&&(h["Content-Type"]="application/json; charset=utf-8"),i)c=JSON.stringify(l);else{c=new FormData;for(let e in l)c.append(e,l[e])}"post"===(d={method:s.method||"post",credentials:this.get("credentials"),headers:h}).method&&(d.body=c);const g=this.get("fetchOptions")||{},p=n.isFunction(g)?g(d):d;this.onStart(),this.fetch(t,e.mixin({},d,p)).then(e=>1==(e.status/200|0)?e.text():e.text().then(e=>Promise.reject(e))).then(e=>this.onResponse(e,o)).catch(e=>this.onError(e,r))}})});
+//# sourceMappingURL=../../sourcemaps/storage_manager/model/RemoteStorage.js.map

@@ -56,14 +56,14 @@ define([
             this.stateInputC = this.pfx + 'input-c';
             this.states = this.config.states || [];
             const {em} = this.config;
+            this.em = em; // modified by lwf
             const emitter = this.getStyleEmitter();
             const coll = this.collection;
             this.target = this.config.em;
-            this.em = em;
             const toList = 'component:toggled component:update:classes';
             const toListCls = 'component:update:classes change:state';
             this.listenTo(em, toList, this.componentChanged);
-            this.listenTo(emitter, 'styleManager:update', this.componentChanged);
+            //this.listenTo(emitter, 'styleManager:update', this.componentChanged); // modified by lwf
             this.listenTo(em, toListCls, this.__handleStateChange);
             this.listenTo(em, 'styleable:change change:device', this.checkSync);
             this.listenTo(coll, 'add', this.addNew);

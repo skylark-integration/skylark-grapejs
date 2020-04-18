@@ -1,9 +1,9 @@
 define(['./config/config'], function (defaults) {
     'use strict';
+
     return config => {
-        var c = config || {};
         for (var name in defaults) {
-            if (!(name in c))
+            if (!(name in defaults))
                 c[name] = defaults[name];
         }
         var plugins = {};
@@ -23,4 +23,5 @@ define(['./config/config'], function (defaults) {
             }
         };
     };
+
 });

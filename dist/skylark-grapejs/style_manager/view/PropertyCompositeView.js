@@ -1,0 +1,9 @@
+/**
+ * skylark-grapejs - A version of garpejs that ported to running on skylarkjs
+ * @author Hudaokeji, Inc.
+ * @version v0.9.0
+ * @link https://github.com/skylark-integration/skylark-grapejs/
+ * @license MIT
+ */
+define(["skylark-backbone","./PropertyView"],function(e,t){"use strict";const i=e.$;return t.extend({templateInput(){const e=this.pfx;return`\n      <div class="${e}field ${e}composite">\n        <span id="${e}input-holder"></span>\n      </div>\n    `},inputValueChanged(...e){this.model.get("detached")||t.prototype.inputValueChanged.apply(this,e)},clear(e){const i=this.properties;i&&i.forEach(e=>e.clear()),t.prototype.clear.apply(this,arguments)},onRender(){var e=this.model,t=e.get("properties")||[];if(this.properties=[],t.length&&(this.$input||(this.$input=i('<input type="hidden" value="0">'),this.input=this.$input.get(0)),this.props||(this.props=e.get("properties")),!this.$props)){this.props.each(function(t,i){t&&"composite"==t.get("type")&&(this.props.remove(t),console.warn("Nested composite types not yet allowed.")),t.parent=e},this);var p=new(0,require("./PropertiesView").default)(this.getPropsConfig());this.$props=p.render().$el,this.properties=p.properties,this.$el.find(`#${this.pfx}input-holder`).append(this.$props)}},getPropsConfig(e){var t=this;const i=this.model;var p={config:{...this.config,highlightComputed:0},collection:this.props,target:this.target,propTarget:this.propTarget,onChange(e,t,p){i.set("value",i.getFullValue(),p)},customValue:(e,i)=>t.valueOnIndex(i,e)};return i.get("detached")&&delete p.onChange,p},valueOnIndex(e,t){let i;const p=this.getTargetValue({ignoreDefault:1});if(p){i=p.split(this.model.getSplitSeparator())[e]}else i=t&&t.getTargetValue({ignoreCustomValue:1,ignoreDefault:1});return i},clearCached(){t.prototype.clearCached.apply(this,arguments),this.$input=null,this.props=null,this.$props=null}})});
+//# sourceMappingURL=../../sourcemaps/style_manager/view/PropertyCompositeView.js.map

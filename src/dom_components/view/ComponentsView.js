@@ -3,7 +3,8 @@ define([
     'skylark-underscore'
 ], function (Backbone, a) {
     'use strict';
-    return Backbone.View.extend({
+
+    var ComponentsView =  Backbone.View.extend({
         initialize(o) {
             this.opts = o || {};
             this.config = o.config || {};
@@ -55,7 +56,7 @@ define([
         },
         addToCollection(model, fragmentEl, index) {
             if (!this.compView)
-                this.compView = require('./ComponentView').default;
+                this.compView = ComponentsView.ComponentView ;//require('./ComponentView').default; // modified by lwf
             const {config, opts, em} = this;
             const fragment = fragmentEl || null;
             const dt = opts.componentTypes || em && em.get('DomComponents').getTypes();
@@ -108,4 +109,6 @@ define([
             return this;
         }
     });
+
+    return ComponentsView;
 });

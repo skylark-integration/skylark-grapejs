@@ -1,7 +1,7 @@
 define([
     'skylark-backbone',
     'skylark-underscore',
-    'utils/mixins'
+    '../../utils/mixins'
 ], function (Backbone, a, b) {
     'use strict';
     const $ = Backbone.$;

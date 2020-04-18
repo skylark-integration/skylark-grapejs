@@ -3,7 +3,12 @@ define([
     'skylark-underscore',
     './Property',
     '../../domain_abstract/ui/InputNumber'
-], function (a, Property, InputNumber) {
+], function (
+    langx,
+    a, 
+    Property, 
+    InputNumber
+) {
     'use strict';
     return Property.extend({
         defaults: {

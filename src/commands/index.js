@@ -2,8 +2,87 @@ define([
     'skylark-underscore',
     './view/CommandAbstract',
     './config/config',
-    '../../dom_components/model/Component'
-], function (a, CommandAbstract, defaults, b) {
+    '../dom_components/model/Component',
+
+    './view/CanvasClear',
+    './view/CanvasMove',
+
+    './view/ComponentDelete',
+    './view/ComponentDrag',
+    './view/ComponentEnter',
+    './view/ComponentExit',
+    './view/ComponentNext',
+    './view/ComponentPrev',
+    './view/ComponentStyleClear',
+
+    './view/CopyComponent',
+    './view/DeleteComponent',
+  
+    './view/ExportTemplate',
+
+    './view/Fullscreen',
+
+    './view/MoveComponent',
+
+    './view/OpenLayers',
+    './view/OpenStyleManager',
+    './view/OpenTraitManager',
+    './view/OpenBlocks',
+    './view/OpenAssets',
+ 
+    './view/PasteComponent',
+    './view/Preview',
+
+    './view/Resize',
+
+    './view/SelectComponent',
+    './view/SelectPosition',
+
+    './view/ShowOffset',
+    './view/SwitchVisibility'
+], function (
+    a, 
+    CommandAbstract, 
+    defaults, 
+    b,
+
+    ViewCanvasClear,
+    ViewCanvasMove,
+
+    ViewComponentDelete,
+    ViewComponentDrag,
+    ViewComponentEnter,
+    ViewComponentExit,
+    ViewComponentNext,
+    ViewComponentPrev,
+    ViewComponentStyleClear,
+
+    ViewCopyComponent,
+    ViewDeleteComponent,
+  
+    ViewExportTemplate,
+
+    ViewFullscreen,
+
+    ViewMoveComponent,
+
+    ViewOpenLayers,
+    ViewOpenStyleManager,
+    ViewOpenTraitManager,
+    ViewOpenBlocks,
+    ViewOpenAssets,
+ 
+    ViewPasteComponent,
+    ViewPreview,
+
+    ViewResize,
+
+    ViewSelectComponent,
+    ViewSelectPosition,
+
+    ViewShowOffset,
+    ViewSwitchVisibility  
+) {
     'use strict';
     return () => {
         let em;
@@ -15,112 +94,146 @@ define([
             [
                 'preview',
                 'Preview',
-                'preview'
+                'preview',
+                ViewPreview
             ],
             [
                 'resize',
                 'Resize',
-                'resize'
+                'resize',
+                ViewResize
             ],
             [
                 'fullscreen',
                 'Fullscreen',
-                'fullscreen'
+                'fullscreen',
+                ViewFullscreen
             ],
             [
                 'copy',
-                'CopyComponent'
+                'CopyComponent',
+                '',
+                ViewCopyComponent
             ],
             [
                 'paste',
-                'PasteComponent'
+                'PasteComponent',
+                '',
+                ViewPasteComponent
             ],
             [
                 'canvas-move',
-                'CanvasMove'
+                'CanvasMove',
+                '',
+                ViewCanvasMove
             ],
             [
                 'canvas-clear',
-                'CanvasClear'
+                'CanvasClear',
+                '',
+                ViewCanvasClear
             ],
             [
                 'open-code',
                 'ExportTemplate',
-                'export-template'
+                'export-template',
+                ViewExportTemplate
             ],
             [
                 'open-layers',
                 'OpenLayers',
-                'open-layers'
+                'open-layers',
+                ViewOpenLayers
             ],
             [
                 'open-styles',
                 'OpenStyleManager',
-                'open-sm'
+                'open-sm',
+                ViewOpenStyleManager
             ],
             [
                 'open-traits',
                 'OpenTraitManager',
-                'open-tm'
+                'open-tm',
+                ViewOpenTraitManager
             ],
             [
                 'open-blocks',
                 'OpenBlocks',
-                'open-blocks'
+                'open-blocks',
+                ViewOpenBlocks
             ],
             [
                 'open-assets',
                 'OpenAssets',
-                'open-assets'
+                'open-assets',
+                ViewOpenAssets
             ],
             [
                 'component-select',
                 'SelectComponent',
-                'select-comp'
+                'select-comp',
+                ViewSelectComponent
             ],
             [
                 'component-outline',
                 'SwitchVisibility',
-                'sw-visibility'
+                'sw-visibility',
+                ViewSwitchVisibility
             ],
             [
                 'component-offset',
                 'ShowOffset',
-                'show-offset'
+                'show-offset',
+                ViewShowOffset
             ],
             [
                 'component-move',
                 'MoveComponent',
-                'move-comp'
+                'move-comp',
+                ViewMoveComponent
             ],
             [
                 'component-next',
-                'ComponentNext'
+                'ComponentNext',
+                '',
+                ViewComponentNext
             ],
             [
                 'component-prev',
-                'ComponentPrev'
+                'ComponentPrev',
+                '',
+                ViewComponentPrev
             ],
             [
                 'component-enter',
-                'ComponentEnter'
+                'ComponentEnter',
+                '',
+                ViewComponentEnter
             ],
             [
                 'component-exit',
                 'ComponentExit',
-                'select-parent'
+                'select-parent',
+                ViewComponentExit
             ],
             [
                 'component-delete',
-                'ComponentDelete'
+                'ComponentDelete',
+                '',
+                ViewComponentDelete
             ],
             [
                 'component-style-clear',
-                'ComponentStyleClear'
+                'ComponentStyleClear',
+                '',
+                ViewComponentStyleClear
             ],
             [
                 'component-drag',
-                'ComponentDrag'
+                'ComponentDrag',
+                '',
+                ViewComponentDrag
             ]
         ];
         const add = function (id, obj) {
@@ -224,7 +337,7 @@ define([
                 defaultCommands['core:redo'] = e => e.UndoManager.redo();
                 commandsDef.forEach(item => {
                     const oldCmd = item[2];
-                    const cmd = require(`./view/${ item[1] }`).default;
+                    const cmd = item[3]; //require(`./view/${ item[1] }`).default; // modified by lwf
                     const cmdName = `core:${ item[0] }`;
                     defaultCommands[cmdName] = cmd;
                     if (oldCmd) {

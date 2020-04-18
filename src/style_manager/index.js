@@ -17,7 +17,7 @@ define([
                 return c;
             },
             init(config) {
-                c = langx.mxinin({},defaults,conf);
+                c = {...defaults,...config};
                 const ppfx = c.pStylePrefix;
                 this.em = c.em;
                 if (ppfx)

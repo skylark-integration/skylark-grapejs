@@ -1,10 +1,10 @@
 define([
     'skylark-underscore',
     'skylark-backbone',
-    'skylark-codemirror',
+    "skylark-codemirror/CodeMirror",
     'skylark-codemirror/mode/htmlmixed/htmlmixed',
     'skylark-codemirror/mode/css/css',
-    './formatting'
+    './formating'
 ], function (a, Backbone, CodeMirror) {
     'use strict';
     return Backbone.Model.extend({

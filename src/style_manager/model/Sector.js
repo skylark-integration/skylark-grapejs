@@ -3,9 +3,14 @@ define([
     'skylark-underscore',
     './Properties',
     './PropertyFactory'
-], function (Backbone, a, Properties, PropertyFactory) {
+], function (
+    Backbone, 
+    a, 
+    Properties, 
+    PropertyFactory
+) {
     'use strict';
-    return Backbone.Model.undefined({
+    return Backbone.Model.extend({
         defaults: {
             id: '',
             name: '',
@@ -62,7 +67,7 @@ define([
             if (!buildP.length)
                 return;
             if (!this.propFactory)
-                this.propFactory = new PropertyFactory();
+                this.propFactory = PropertyFactory(); //new PropertyFactory(); // modified by lwf
             r = this.propFactory.build(buildP);
             return r;
         }

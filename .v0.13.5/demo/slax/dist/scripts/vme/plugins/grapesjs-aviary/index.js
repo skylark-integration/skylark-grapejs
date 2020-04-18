@@ -62,7 +62,7 @@ define([
             }
         };
 
-        var imageEditor = new Aviary.Feather(config);
+        //var imageEditor = new Aviary.Feather(config);
         var cmdm = editor.Commands;
 
         /**

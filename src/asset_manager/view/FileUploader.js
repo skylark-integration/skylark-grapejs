@@ -186,7 +186,7 @@ define([
         },
         render() {
             const {$el, pfx, em} = this;
-            $el.html(this.undefined({
+            $el.html(this.template({
                 title: em && em.t('assetManager.uploadTitle'),
                 uploadId: this.uploadId,
                 disabled: this.disabled,

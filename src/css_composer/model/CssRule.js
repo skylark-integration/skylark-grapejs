@@ -26,7 +26,7 @@ define([
             if (em) {
                 const sm = em.get('SelectorManager');
                 const slct = [];
-                selectors.undefined(selector => {
+                selectors.forEach(selector => {
                     slct.push(sm.add(selector));
                 });
                 selectors = slct;

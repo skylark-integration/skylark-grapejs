@@ -3,13 +3,13 @@ define([
     '../../utils/mixins',
     'skylark-backbone',
     '../../dom_components/view/ComponentView',
-    '../../dom_components/model/Component'
-], function (_, b, Backbone, ComponentView, Component) {
+    '../../dom_components/model/Component',
+    "./ItemsView"
+], function (_, b, Backbone, ComponentView, Component,ItemsView) {
     'use strict';
     const inputProp = 'contentEditable';
     const $ = Backbone.$;
-    let ItemsView;
-    return Backbone.View.extend({
+    var ItemView = Backbone.View.extend({
         events: {
             'mousedown [data-toggle-move]': 'startSort',
             'touchstart [data-toggle-move]': 'startSort',
@@ -264,9 +264,9 @@ define([
             const vis = this.isVisible();
             const el = this.$el.empty();
             const level = this.level + 1;
-            if (_.isUndefined(ItemsView)) {
-                ItemsView = require('./ItemsView').default;
-            }
+            //if (_.isUndefined(ItemsView)) {
+            //    ItemsView = ItemView.ItemsView; // require('./ItemsView').default; modified by lwf
+            //}
             const children = new ItemsView({
                 collection: model.get('components'),
                 config: this.config,
@@ -294,4 +294,7 @@ define([
             return this;
         }
     });
+
+    ItemsView.ItemView = ItemView;
+    return ItemView;
 });

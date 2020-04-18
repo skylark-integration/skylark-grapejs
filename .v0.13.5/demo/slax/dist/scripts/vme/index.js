@@ -1,6 +1,6 @@
 define([
     "backbone",
-   "aviary",
+//   "aviary",
     "ckeditor",
     "filestack",
     "./grapesjs/index",
@@ -12,7 +12,7 @@ define([
     "./plugins/grapesjs-plugin-forms/index",
     "./plugins/grapesjs-preset-webpage/index"
 ], function(backbone, 
-    aviary, 
+//    aviary, 
     ckeditor, filestack, grapesjs) {
     window.Backbone = backbone;
     window.grapesjs = grapesjs;

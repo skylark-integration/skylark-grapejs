@@ -1,0 +1,9 @@
+/**
+ * skylark-grapejs - A version of garpejs that ported to running on skylarkjs
+ * @author Hudaokeji, Inc.
+ * @version v0.9.0
+ * @link https://github.com/skylark-integration/skylark-grapejs/
+ * @license MIT
+ */
+define(["skylark-backbone","./LayerView"],function(e,i){"use strict";return e.View.extend({initialize(e){this.config=e.config||{},this.stackModel=e.stackModel,this.preview=e.preview,this.pfx=this.config.stylePrefix||"",this.ppfx=this.config.pStylePrefix||"",this.propsConfig=e.propsConfig;let i=this.pfx,t=this.ppfx,s=this.collection;this.className=`${i}layers ${t}field`,this.listenTo(s,"add",this.addTo),this.listenTo(s,"deselectAll",this.deselectAll),this.listenTo(s,"reset",this.render);var l=this.config.em||"",o=l?l.get("Utils"):"";this.sorter=o?new o.Sorter({container:this.el,ignoreViewChildren:1,containerSel:`.${i}layers`,itemSel:`.${i}layer`,pfx:this.config.pStylePrefix}):"",s.view=this,this.$el.data("model",s),this.$el.data("collection",s)},addTo(e){var i=this.collection.indexOf(e);this.addToCollection(e,null,i)},addToCollection(e,t,s){var l=t||null;const o=this.stackModel,r=this.config,n=this.sorter,h=this.propsConfig;void 0!==this.preview&&e.set("preview",this.preview);var a=new i({model:e,config:r,sorter:n,stackModel:o,propsConfig:h}).render().el;if(l)l.appendChild(a);else if(void 0!==s){var c="before";this.$el.children().length==s&&(s--,c="after"),s<0?this.$el.append(a):this.$el.children().eq(s)[c](a)}else this.$el.append(a);return a},deselectAll(){this.$el.find("."+this.pfx+"layer").removeClass(this.pfx+"active")},render(){var e=document.createDocumentFragment();return this.$el.empty(),this.collection.each(function(i){this.addToCollection(i,e)},this),this.$el.append(e),this.$el.attr("class",this.className),this.sorter&&(this.sorter.plh=null),this}})});
+//# sourceMappingURL=../../sourcemaps/style_manager/view/LayersView.js.map

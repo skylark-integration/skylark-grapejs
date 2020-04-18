@@ -1,7 +1,12 @@
 define([
     'skylark-backbone',
-    './PropertyView'
-], function (Backbone, PropertyView) {
+    './PropertyView',
+    "./PropertiesView"
+], function (
+    Backbone, 
+    PropertyView,
+    PropertiesView
+) {
     'use strict';
     const $ = Backbone.$;
     return PropertyView.extend({
@@ -44,7 +49,7 @@ define([
                         }
                         prop.parent = model;
                     }, this);
-                    var PropertiesView = require('./PropertiesView').default;
+                    //var PropertiesView = require('./PropertiesView').default;
                     var propsView = new PropertiesView(this.getPropsConfig());
                     this.$props = propsView.render().$el;
                     this.properties = propsView.properties;

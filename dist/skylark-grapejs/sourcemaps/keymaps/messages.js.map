@@ -1,0 +1,1 @@
+{"version":3,"sources":["keymaps/messages.js"],"names":["define","en","hello"],"mappings":";;;;;;;AAAAA,OAAO,WACH,aACA,OAASC,IAAMC,MAAO","file":"../../keymaps/messages.js","sourcesContent":["define(function () {\n    'use strict';\n    return { en: { hello: 'Hello' } };\n});"]}

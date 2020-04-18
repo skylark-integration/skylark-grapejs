@@ -1,0 +1,9 @@
+/**
+ * skylark-grapejs - A version of garpejs that ported to running on skylarkjs
+ * @author Hudaokeji, Inc.
+ * @version v0.9.0
+ * @link https://github.com/skylark-integration/skylark-grapejs/
+ * @license MIT
+ */
+define(["skylark-langx/langx","./config/config","./model/LocalStorage","./model/RemoteStorage"],function(t,r,e,o){"use strict";return()=>{var a={};let n;var s={},g={};return{name:"StorageManager",init(s={}){return a=t.mixin({},r,s),n=a.em,a._disable&&(a.type=0),g.remote=new o(a),g.local=new e(a),a.currentStorage=a.type,this.loadDefaultProviders().setCurrent(a.type),this},getConfig:()=>a,isAutosave:()=>!!a.autosave,setAutosave(t){return a.autosave=!!t,this},getStepsBeforeSave:()=>a.stepsBeforeSave,setStepsBeforeSave(t){return a.stepsBeforeSave=t,this},add(t,r){return s[t]=r,this},get:t=>s[t]||null,getStorages:()=>s,getCurrent:()=>a.currentStorage,setCurrent(t){return a.currentStorage=t,this},store(t,r){const e=this.get(this.getCurrent()),o={};this.onStart("store",t);for(let r in t)o[a.id+r]=t[r];return e?e.store(o,t=>{r&&r(t),this.onEnd("store",t)},t=>{this.onError("store",t)}):null},load(t,r){var e=this.get(this.getCurrent()),o=[],n={};"string"==typeof t&&(t=[t]),this.onStart("load",t);for(var s=0,g=t.length;s<g;s++)o.push(a.id+t[s]);e?e.load(o,t=>{var e=new RegExp("^"+a.id);for(var o in t){var s=o.replace(e,"");n[s]=t[o]}r&&r(n),this.onEnd("load",n)},t=>{r&&r(n),this.onError("load",t)}):r&&r(n)},loadDefaultProviders(){for(var t in g)this.add(t,g[t]);return this},getCurrentStorage(){return this.get(this.getCurrent())},onStart(t,r){n&&(n.trigger("storage:start"),t&&n.trigger(`storage:start:${t}`,r))},onEnd(t,r){n&&(n.trigger("storage:end"),t&&n.trigger(`storage:end:${t}`,r))},onError(t,r){n&&(n.trigger("storage:error",r),t&&n.trigger(`storage:error:${t}`,r),this.onEnd(t,r))},canAutoload(){return this.getCurrentStorage()&&this.getConfig().autoload}}}});
+//# sourceMappingURL=../sourcemaps/storage_manager/index.js.map
