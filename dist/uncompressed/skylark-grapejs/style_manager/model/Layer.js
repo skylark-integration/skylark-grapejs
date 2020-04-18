@@ -1,9 +1,8 @@
 define([
-    'skylark-backbone',
-    './Properties'
-], function (Backbone, Properties) {
+    'skylark-backbone'
+], function (Backbone) {
     'use strict';
-    return Backbone.Model.extend({
+    var Layer = Backbone.Model.extend({
         defaults: {
             index: '',
             value: '',
@@ -15,7 +14,7 @@ define([
         initialize() {
             const prp = this.get('properties');
             var value = this.get('value');
-            this.set('properties', prp instanceof Properties ? prp : new Properties(prp));
+            this.set('properties', prp instanceof Layer.Properties ? prp : new Layer.Properties(prp));
             const props = this.get('properties');
             props.forEach(this.onPropAdd, this);
             this.listenTo(props, 'add', this.onPropAdd);
@@ -50,4 +49,6 @@ define([
             return result.join(' ').trim();
         }
     });
+
+    return Layer;
 });

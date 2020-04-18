@@ -1,5 +1,5 @@
 define([
-    "skylark-langx",
+    "skylark-langx/langx",
     'skylark-underscore',
     './Component'
 ], function (langx,_, Component) {

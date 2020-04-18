@@ -1,5 +1,5 @@
 define([
-    "skylark-langx",
+    "skylark-langx/langx",
     'skylark-underscore',
     'skylark-jquery',
     'skylark-backbone',
@@ -178,7 +178,7 @@ define([
         loadModule(moduleName) {
             const {config} = this;
             const Module = moduleName.default || moduleName;
-            const Mod = new Module();
+            const Mod =  Module(); // new Module() modified by lwf
             const name = Mod.name.charAt(0).toLowerCase() + Mod.name.slice(1);
             const cfgParent = !_.isUndefined(config[name]) ? config[name] : config[Mod.name];
             const cfg = cfgParent || {};
@@ -260,7 +260,7 @@ define([
             const model = b.getModel(el, $);
             const models = _.isArray(model) ? model : [model];
             models.forEach(model => {
-                if (this.get('selected').undefined(model)) {
+                if (this.get('selected').contains(model)) {
                     this.removeSelected(model, opts);
                 } else {
                     this.addSelected(model, opts);

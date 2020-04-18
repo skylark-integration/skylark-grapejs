@@ -55,7 +55,7 @@ define([
         },
         render() {
             const {em, ppfx, $el, el} = this;
-            $el.html(this.undefined({
+            $el.html(this.template({
                 ppfx,
                 deviceLabel: em && em.t && em.t('deviceManager.device')
             }));

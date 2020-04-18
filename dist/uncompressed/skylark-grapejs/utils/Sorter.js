@@ -43,8 +43,8 @@ define([
             this.selectOnEnd = !o.avoidSelectOnEnd;
             this.scale = o.scale;
             this.activeTextModel = null;
-            if (this.em && this.em.undefined) {
-                this.em.undefined('change:canvasOffset', this.updateOffset);
+            if (this.em && this.em.on) {
+                this.em.on('change:canvasOffset', this.updateOffset);
                 this.updateOffset();
             }
         },
@@ -123,9 +123,9 @@ define([
             clonedEl.style.height = `${ rect.height }px`;
             ev && this.moveDragHelper(ev);
             if (this.em) {
-                $(this.em.get('Canvas').getBody().ownerDocument).undefined('mousemove', this.moveDragHelper).undefined('mousemove', this.moveDragHelper);
+                $(this.em.get('Canvas').getBody().ownerDocument).on('mousemove', this.moveDragHelper).on('mousemove', this.moveDragHelper);
             }
-            $(document).undefined('mousemove', this.moveDragHelper).undefined('mousemove', this.moveDragHelper);
+            $(document).on('mousemove', this.moveDragHelper).on('mousemove', this.moveDragHelper);
         },
         moveDragHelper(e) {
             const doc = e.target.ownerDocument;
@@ -157,7 +157,7 @@ define([
                 return;
             var elem = el.parentNode;
             while (elem && elem.nodeType === 1) {
-                if (this.undefined(elem, selector))
+                if (this.matches(elem, selector))
                     return elem;
                 elem = elem.parentNode;
             }
@@ -194,7 +194,7 @@ define([
             this.target = null;
             this.prevTarget = null;
             this.moved = 0;
-            if (src && !this.undefined(src, `${ itemSel }, ${ contSel }`)) {
+            if (src && !this.matches(src, `${ itemSel }, ${ contSel }`)) {
                 src = this.closest(src, itemSel);
             }
             this.eV = src;
@@ -240,9 +240,9 @@ define([
                         avoidStore: 1,
                         avoidUpdateStyle: 1
                     };
-                    const tempModel = comps.add(dropContent, langx.mixin({},opts,{
+                    const tempModel = comps.add(dropContent, {...opts,
                         temporary: 1
-                    }));
+                    });
                     dropModel = comps.remove(tempModel, opts);
                     dropModel = dropModel instanceof Array ? dropModel[0] : dropModel;
                     this.dropModel = dropModel;
@@ -413,13 +413,13 @@ define([
             let draggable = srcModel.get('draggable');
             draggable = draggable instanceof Array ? draggable.join(', ') : draggable;
             result.dragInfo = draggable;
-            draggable = _.isString(draggable) ? this.undefined(trg, draggable) : draggable;
+            draggable = _.isString(draggable) ? this.matches(trg, draggable) : draggable;
             result.draggable = draggable;
             let droppable = trgModel.get('droppable');
             droppable = droppable instanceof Backbone.Collection ? 1 : droppable;
             droppable = droppable instanceof Array ? droppable.join(', ') : droppable;
             result.dropInfo = droppable;
-            droppable = _.isString(droppable) ? this.undefined(src, droppable) : droppable;
+            droppable = _.isString(droppable) ? this.matches(src, droppable) : droppable;
             droppable = draggable && this.isTextableActive(srcModel, trgModel) ? 1 : droppable;
             result.droppable = droppable;
             if (!droppable || !draggable) {
@@ -433,7 +433,7 @@ define([
             if (!target) {
                 return dims;
             }
-            if (!this.undefined(target, `${ this.itemSel }, ${ this.containerSel }`)) {
+            if (!this.matches(target, `${ this.itemSel }, ${ this.containerSel }`)) {
                 target = this.closest(target, this.itemSel);
             }
             if (this.draggable instanceof Array) {
@@ -477,7 +477,7 @@ define([
             const em = this.em;
             const containerSel = this.containerSel;
             const itemSel = this.itemSel;
-            if (!this.undefined(target, `${ itemSel }, ${ containerSel }`)) {
+            if (!this.matches(target, `${ itemSel }, ${ containerSel }`)) {
                 target = this.closest(target, itemSel);
             }
             if (this.draggable instanceof Array) {
@@ -562,7 +562,7 @@ define([
             _.each(trg.children, (el, i) => {
                 const model = mixins.getModel(el, $);
                 const elIndex = model && model.index ? model.index() : i;
-                if (!mixins.isTextNode(el) && !this.undefined(el, this.itemSel)) {
+                if (!mixins.isTextNode(el) && !this.matches(el, this.itemSel)) {
                     return;
                 }
                 const dim = this.getDim(el);
@@ -711,10 +711,10 @@ define([
                     parent: srcModel && srcModel.parent(),
                     index: srcModel && srcModel.index()
                 };
-                moved.length ? moved.forEach(m => onEndMove(m, this, data)) : onEndMove(null, this, langx.mixin({},
-                    data, {
+                moved.length ? moved.forEach(m => onEndMove(m, this, data)) : onEndMove(null, this, {
+                    ...data, 
                     cancelled: 1
-                }));
+                });
             }
         },
         move(dst, src, pos) {
@@ -742,7 +742,7 @@ define([
                 };
                 if (!dropContent) {
                     opts.temporary = 1;
-                    modelTemp = targetCollection.add({}, langx.mixin({},opts ));
+                    modelTemp = targetCollection.add({}, {...opts });
                     if (model.collection) {
                         modelToDrop = model.collection.remove(model, { temporary: 1 });
                     }

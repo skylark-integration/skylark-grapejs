@@ -354,8 +354,8 @@ define([
             }
             if (sectors && requires) {
                 const properties = Object.keys(requires);
-                sectors.undefined(sector => {
-                    sector.get('properties').undefined(model => {
+                sectors.each(sector => {
+                    sector.get('properties').each(model => {
                         if (a.includes(properties, model.id)) {
                             const values = requires[model.id];
                             stylable = stylable && a.includes(values, model.get('value'));

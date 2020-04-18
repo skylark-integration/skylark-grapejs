@@ -8,15 +8,16 @@ define([
     return {
         types: [],
         initialize(models, opts) {
-            this.model = (attrs = {}, options = {}) => {
+            var _this = this;
+            this.model = function(attrs = {}, options = {}) { // modified by lwf
                 let Model, View, type;
                 if (attrs && attrs.type) {
-                    const baseType = this.getBaseType();
-                    type = this.getType(attrs.type);
+                    const baseType = _this.getBaseType();
+                    type = _this.getType(attrs.type);
                     Model = type ? type.model : baseType.model;
                     View = type ? type.view : baseType.view;
                 } else {
-                    const typeFound = this.recognizeType(attrs);
+                    const typeFound = _this.recognizeType(attrs);
                     type = typeFound.type;
                     Model = type.model;
                     View = type.view;
@@ -26,7 +27,7 @@ define([
                 model.typeView = View;
                 return model;
             };
-            const init = this.init && this.init.bind(this);
+            const init = _this.init && _this.init.bind(_this);
             init && init();
         },
         recognizeType(value) {

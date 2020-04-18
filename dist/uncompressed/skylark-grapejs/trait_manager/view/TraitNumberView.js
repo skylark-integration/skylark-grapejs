@@ -1,6 +1,6 @@
 define([
     './TraitView',
-    'domain_abstract/ui/InputNumber'
+    '../../domain_abstract/ui/InputNumber'
 ], function (TraitView, InputNumber) {
     'use strict';
     return TraitView.extend({

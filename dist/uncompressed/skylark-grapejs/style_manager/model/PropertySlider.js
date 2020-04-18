@@ -1,7 +1,10 @@
 define([
     "skylark-langx/langx",
 	'./PropertyInteger'
-], function (Property) {
+], function (
+	langx,
+	Property
+) {
     'use strict';
     return Property.extend({
         defaults: {

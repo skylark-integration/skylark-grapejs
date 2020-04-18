@@ -5,14 +5,14 @@ define([
 ], function (langx,Backbone, _) {
     'use strict';
     let Component;
-    return Backbone.Collection.extend({
+    var Components =  Backbone.Collection.extend({
         initialize(models, opt = {}) {
             this.opt = opt;
             this.listenTo(this, 'add', this.onAdd);
             this.config = opt.config;
             this.em = opt.em;
             const {em} = this;
-            this.model = (attrs, options) => {
+            this.model = function(attrs, options) { // modified by lwf
                 var model;
                 const df = opt.em.get('DomComponents').componentTypes;
                 options.em = opt.em;
@@ -42,7 +42,7 @@ define([
             const cssc = em.get('CssComposer');
             const parsed = em.get('Parser').parseHtml(value);
             if (!Component)
-                Component = require('./Component').default;
+                Component =  Components.Component; //require('./Component').default; // modified by lwf
             Component.checkId(parsed.html, parsed.css, domc.componentsById);
             if (parsed.css && cssc && !opt.temporary) {
                 cssc.addCollection(parsed.css, langx.mixin({},opt,{
@@ -127,4 +127,6 @@ define([
             }
         }
     });
+
+    return Components;
 });

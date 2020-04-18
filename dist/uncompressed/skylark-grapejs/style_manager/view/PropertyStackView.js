@@ -1,9 +1,16 @@
 define([
     'skylark-underscore',
+    "./PropertiesView",
     './PropertyCompositeView',
     './LayersView',
     '../../code_manager/model/CssGenerator'
-], function (a, PropertyCompositeView, LayersView, CssGenerator) {
+], function (
+    a, 
+    PropertiesView,
+    PropertyCompositeView, 
+    LayersView, 
+    CssGenerator
+) {
     'use strict';
     const cssGen = new CssGenerator();
     return PropertyCompositeView.extend({
@@ -175,7 +182,7 @@ define([
             const self = this;
             const model = this.model;
             const fieldEl = this.el.querySelector('[data-layers-wrapper]');
-            const PropertiesView = require('./PropertiesView').default;
+            //const PropertiesView = require('./PropertiesView').default;
             const propsConfig = {
                 target: this.target,
                 propTarget: this.propTarget,

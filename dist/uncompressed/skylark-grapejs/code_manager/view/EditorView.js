@@ -16,7 +16,7 @@ define([
         render() {
             var obj = this.model.toJSON();
             obj.pfx = this.pfx;
-            this.$el.html(this.undefined(obj));
+            this.$el.html(this.template(obj));
             this.$el.attr('class', this.pfx + 'editor-c');
             this.$el.find('#' + this.pfx + 'code').append(this.model.get('input'));
             return this;

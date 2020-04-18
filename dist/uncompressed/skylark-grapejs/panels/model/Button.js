@@ -1,6 +1,6 @@
 define(['skylark-backbone'], function (Backbone) {
     'use strict';
-    return Backbone.Model.extend({
+    var Button =  Backbone.Model.extend({
         defaults: {
             id: '',
             label: '',
@@ -20,9 +20,11 @@ define(['skylark-backbone'], function (Backbone) {
         },
         initialize(options) {
             if (this.get('buttons').length) {
-                var Buttons = require('./Buttons').default;
+                var Buttons = Button.Buttons; //require('./Buttons').default; modified by lwf
                 this.set('buttons', new Buttons(this.get('buttons')));
             }
         }
     });
+
+    return Button;
 });

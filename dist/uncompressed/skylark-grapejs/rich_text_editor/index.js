@@ -1,6 +1,6 @@
 define([
     './model/RichTextEditor',
-    '../../utils/mixins',
+    '../utils/mixins',
     './config/config'
 ], function (RichTextEditor, a, defaults) {
     'use strict';
@@ -130,8 +130,8 @@ define([
                 if (em) {
                     setTimeout(this.updatePosition.bind(this), 0);
                     const event = 'change:canvasOffset canvasScroll frame:scroll component:update';
-                    em.undefined(event, this.updatePosition, this);
-                    em.undefined(event, this.updatePosition, this);
+                    em.on(event, this.updatePosition, this);
+                    em.on(event, this.updatePosition, this);
                     em.trigger('rte:enable', view, rte);
                 }
                 return rte;

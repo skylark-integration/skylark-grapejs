@@ -116,7 +116,7 @@ define([
             },
             getOffset() {
                 var frameOff = this.offset(this.getFrameEl());
-                var canvasOff = this.offset(this.undefined());
+                var canvasOff = this.offset(this.getElement());
                 return {
                     top: frameOff.top - canvasOff.top,
                     left: frameOff.left - canvasOff.left

@@ -1,7 +1,7 @@
 define([
     'skylark-underscore',
     'skylark-backbone',
-    'skylark-codemirror',
+    "skylark-codemirror/CodeMirror",
     'skylark-codemirror/mode/htmlmixed/htmlmixed',
     'skylark-codemirror/mode/css/css',
     './formating'

@@ -8,7 +8,7 @@ define([
     '../../utils/mixins'
 ], function (Backbone, a, Components, ComponentsView, Selectors, b, c) {
     'use strict';
-    return Backbone.View.extend({
+    var ComponentView = Backbone.View.extend({
         className() {
             return this.getClasses();
         },
@@ -131,7 +131,7 @@ define([
         importClasses() {
             var clm = this.config.em.get('SelectorManager');
             if (clm) {
-                this.model.get('classes').undefined(m => {
+                this.model.get('classes').each(m => {
                     clm.add(m.get('name'));
                 });
             }
@@ -354,4 +354,8 @@ define([
         onRender() {
         }
     });
+
+    ComponentsView.ComponentView = ComponentView;
+
+    return ComponentView;
 });

@@ -3,7 +3,12 @@ define([
     'skylark-backbone',
     'skylark-underscore',
     '../../utils/mixins'
-], function (langx,Backbone, a, b) {
+], function (
+    langx,
+    Backbone, 
+    a, 
+    b
+) {
     'use strict';
     const Property = Backbone.Model.extend({
         defaults: {

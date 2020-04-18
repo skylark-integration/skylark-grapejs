@@ -5,5 +5,5 @@
  * @link https://github.com/skylark-integration/skylark-grapejs/
  * @license MIT
  */
-define(["skylark-langx/langx","./config/config","./model/ParserCss","./model/ParserHtml"],function(e,s,r,t){"use strict";return()=>{let n,a,i={};return{compTypes:"",parserCss:null,parserHtml:null,name:"Parser",getConfig:()=>i,init(m={}){return(i=e.mixin({},s,m)).Parser=this,n=new t(i),a=new r(i),this.em=i.em,this.parserCss=a,this.parserHtml=n,this},parseHtml(e){const{em:s,compTypes:r}=this;return n.compTypes=s?s.get("DomComponents").getTypes():r,n.parse(e,a)},parseCss:e=>a.parse(e)}}});
+define(["skylark-langx/langx","./config/config","./model/ParserCss","./model/ParserHtml"],function(s,e,r,t){"use strict";return()=>{let s,n,a={};return{compTypes:"",parserCss:null,parserHtml:null,name:"Parser",getConfig:()=>a,init(p={}){return(a={...e,...p}).Parser=this,s=t(a),n=r(a),this.em=a.em,this.parserCss=n,this.parserHtml=s,this},parseHtml(e){const{em:r,compTypes:t}=this;return s.compTypes=r?r.get("DomComponents").getTypes():t,s.parse(e,n)},parseCss:s=>n.parse(s)}}});
 //# sourceMappingURL=../sourcemaps/parser/index.js.map

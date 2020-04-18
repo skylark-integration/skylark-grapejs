@@ -266,6 +266,8 @@ define([],function(){
   // reset modifiers to false whenever the window is (re)focused.
   addEvent(window, 'focus', resetModifiers);
 
+  /*
+
   // store previously defined key
   var previousKey = global.key;
 
@@ -276,7 +278,6 @@ define([],function(){
     return k;
   }
 
-  /*
   // set window.key and window.key.set/get/deleteScope, and the default filter
   global.key = assignKey;
   global.key.setScope = setScope;
@@ -288,6 +289,14 @@ define([],function(){
   global.key.noConflict = noConflict;
   global.key.unbind = unbindKey;
 */
+  assignKey.setScope = setScope;
+  assignKey.getScope = getScope;
+  assignKey.deleteScope = deleteScope;
+  assignKey.filter = filter;
+  assignKey.isPressed = isPressed;
+  assignKey.getPressedKeyCodes = getPressedKeyCodes;
+  assignKey.unbind = unbindKey;
+
   return assignKey;
 
 });

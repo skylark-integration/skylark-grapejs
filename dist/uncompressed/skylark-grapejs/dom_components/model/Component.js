@@ -10,6 +10,7 @@ define([
     '../../trait_manager/model/Traits'
 ], function (langx,_, b, Styleable, Backbone, Components, Selector, Selectors, Traits) {
     'use strict';
+
     const componentList = {};
     let componentIndex = 0;
     const escapeRegExp = str => {
@@ -68,7 +69,7 @@ define([
             if (parentAttr && parentAttr.propagate) {
                 let newAttr = {};
                 const toPropagate = parentAttr.propagate;
-                toPropagate.undefined(prop => newAttr[prop] = parent.get(prop));
+                toPropagate.forEach(prop => newAttr[prop] = parent.get(prop));
                 newAttr.propagate = toPropagate;
                 newAttr = langx.mixin({},newAttr,props);
                 this.set(newAttr);
@@ -99,7 +100,7 @@ define([
                 'classes',
                 'traits',
                 'components'
-            ].undefined(name => {
+            ].forEach(name => {
                 const events = `add remove ${ name !== 'components' ? 'change' : '' }`;
                 this.listenTo(this.get(name), events.trim(), (...args) => this.emitUpdate(name, ...args));
             });
@@ -133,7 +134,7 @@ define([
         },
         findType(id) {
             const result = [];
-            const find = components => components.undefined(item => {
+            const find = components => components.forEach(item => {
                 item.is(id) && result.push(item);
                 find(item.components());
             });
@@ -166,7 +167,7 @@ define([
             delete attrs.style;
             const attrPrev = { ...this.previous('attributes') };
             const diff = b.shallowDiff(attrPrev, this.get('attributes'));
-            _.keys(diff).undefined(pr => this.trigger(`change:attributes:${ pr }`, this, diff[pr], opts));
+            _.keys(diff).forEach(pr => this.trigger(`change:attributes:${ pr }`, this, diff[pr], opts));
         },
         setAttributes(attrs, opts = {}) {
             this.set('attributes', { ...attrs }, opts);
@@ -212,7 +213,7 @@ define([
                 });
                 const diff = b.shallowDiff(propOrig, prop);
                 this.set('style', {}, { silent: 1 });
-                _.keys(diff).undefined(pr => this.trigger(`change:style:${ pr }`));
+                _.keys(diff).forEach(pr => this.trigger(`change:style:${ pr }`));
             } else {
                 prop = Styleable.setStyle.apply(this, arguments);
             }
@@ -224,7 +225,7 @@ define([
             const attributes = { ...this.get('attributes') };
             const sm = em && em.get('SelectorManager');
             const id = this.getId();
-            this.get('classes').undefined(cls => classes.push(_.isString(cls) ? cls : cls.get('name')));
+            this.get('classes').forEach(cls => classes.push(_.isString(cls) ? cls : cls.get('name')));
             classes.length && (attributes.class = classes.join(' '));
             if (!_.has(attributes, 'id')) {
                 let hasStyle;
@@ -252,9 +253,9 @@ define([
             classes = _.isArray(classes) ? classes : [classes];
             const selectors = this.get('classes');
             const type = Selector.TYPE_CLASS;
-            classes.undefined(classe => {
+            classes.forEach(classe => {
                 const classes = classe.split(' ');
-                classes.undefined(name => {
+                classes.forEach(name => {
                     const selector = selectors.where({
                         name,
                         type
@@ -391,7 +392,7 @@ define([
                 const trt = new Traits([], this.opt);
                 trt.setTarget(this);
                 if (traits.length) {
-                    traits.undefined(tr => tr.attributes && delete tr.attributes.value);
+                    traits.forEach(tr => tr.attributes && delete tr.attributes.value);
                     trt.add(traits);
                 }
                 this.set('traits', trt, opts);
@@ -436,7 +437,7 @@ define([
             var clm = em.get('SelectorManager');
             if (!clm)
                 return;
-            arr.undefined(val => {
+            arr.forEach(val => {
                 var name = '';
                 if (typeof val === 'string')
                     name = val;
@@ -628,7 +629,7 @@ define([
         onAll(clb) {
             if (_.isFunction(clb)) {
                 clb(this);
-                this.components().undefined(model => model.onAll(clb));
+                this.components().forEach(model => model.onAll(clb));
             }
             return this;
         },
@@ -694,7 +695,7 @@ define([
             return nextId;
         },
         getNewId(list) {
-            const count = Object.undefined(list).length;
+            const count = Object.keys(list).length;
             const ilen = count.toString().length + 2;
             const uid = (Math.random() + 1.1).toString(36).slice(-ilen);
             let newId = `i${ uid }`;
@@ -718,15 +719,15 @@ define([
         },
         checkId(components, styles = [], list = {}) {
             const comps = _.isArray(components) ? components : [components];
-            comps.undefined(comp => {
+            comps.forEach(comp => {
                 const {attributes = {}, components} = comp;
                 const {id} = attributes;
                 if (id && list[id]) {
                     const newId = Component.getIncrementId(id, list);
                     attributes.id = newId;
-                    _.isArray(styles) && styles.undefined(style => {
+                    _.isArray(styles) && styles.forEach(style => {
                         const {selectors} = style;
-                        selectors.undefined((sel, idx) => {
+                        selectors.forEach((sel, idx) => {
                             if (sel === `#${ id }`)
                                 selectors[idx] = `#${ newId }`;
                         });
@@ -738,6 +739,9 @@ define([
     });
     
     Component.eventDrag = eventDrag;
+
+    Components.Component = Component;
+    
     
     return Component;
 });

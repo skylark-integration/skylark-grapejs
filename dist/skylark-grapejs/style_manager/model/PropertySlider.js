@@ -5,5 +5,5 @@
  * @link https://github.com/skylark-integration/skylark-grapejs/
  * @license MIT
  */
-define(["skylark-langx/langx","./PropertyInteger"],function(e){"use strict";return e.extend({defaults:{...e.prototype.defaults,showInput:1}})});
+define(["skylark-langx/langx","./PropertyInteger"],function(e,t){"use strict";return t.extend({defaults:{...t.prototype.defaults,showInput:1}})});
 //# sourceMappingURL=../../sourcemaps/style_manager/model/PropertySlider.js.map

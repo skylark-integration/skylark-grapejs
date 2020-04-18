@@ -18,14 +18,14 @@ define([
             const wrapperIsBody = opts.wrapperIsBody;
             const isWrapper = model.get('wrapper');
             this.ids.push(`#${ model.getId() }`);
-            classes.undefined(model => this.compCls.push(model.getFullName()));
+            classes.each(model => this.compCls.push(model.getFullName()));
             if (!avoidInline && style) {
                 let selector = `#${ model.getId() }`;
                 selector = wrapperIsBody && isWrapper ? 'body' : selector;
                 code = `${ selector }{${ style }}`;
             }
             const components = model.components();
-            components.undefined(model => code += this.buildFromModel(model, opts));
+            components.each(model => code += this.buildFromModel(model, opts));
             return code;
         },
         build(model, opts = {}) {
@@ -40,7 +40,7 @@ define([
                 const rules = cssc.getAll();
                 const atRules = {};
                 const dump = [];
-                rules.undefined(rule => {
+                rules.each(rule => {
                     const atRule = rule.getAtRule();
                     if (atRule) {
                         const mRules = atRules[atRule];
@@ -79,7 +79,7 @@ define([
             const selectorsAdd = rule.get('selectorsAdd');
             const singleAtRule = rule.get('singleAtRule');
             let found;
-            rule.get('selectors').undefined(selector => {
+            rule.get('selectors').each(selector => {
                 const name = selector.getFullName();
                 if (this.compCls.indexOf(name) >= 0 || this.ids.indexOf(name) >= 0 || opts.keepUnusedStyles) {
                     found = 1;

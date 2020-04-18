@@ -5782,10 +5782,10 @@ define('skylark-domx-data/data',[
                 }
                 return this;
             } else {
-                return elm.getAttribute(name);
+                return elm.getAttribute ? elm.getAttribute(name) : elm[name];
             }
         } else {
-            elm.setAttribute(name, value);
+            elm.setAttribute ? elm.setAttribute(name, value) : elm[name] = value;
             return this;
         }
     }
@@ -13203,15 +13203,6 @@ define('skylark-jquery/main',[
 
 define('skylark-jquery', ['skylark-jquery/main'], function (main) { return main; });
 
-define('skylark-langx/main',[
-    "./skylark",
-    "./langx"
-], function(skylark) {
-    return skylark;
-});
-
-define('skylark-langx', ['skylark-langx/main'], function (main) { return main; });
-
 define('skylark-grapejs/editor/config/config',[],function () {
     'use strict';
     return {
@@ -15651,7 +15642,7 @@ define('skylark-data-entities/Collection',[
 
 		// Define how to uniquely identify entities in the collection.
 		entityId: function(attrs) {
-		  return attrs[this.entity.prototype.idAttribute || 'id'];
+		  return attrs[this.entity.prototype && this.entity.prototype.idAttribute || 'id'];
 		},
 
 		// Private method to reset all internal state. Called when the collection
@@ -16102,6 +16093,7 @@ define('skylark-backbone/events',[
 
   var EventExtends = {
       on  : function(name, callback, context){
+          context = context || this;
           var fn =  function() {
             var args = slice.call(arguments,1);
             if (name=="all") {
@@ -16142,6 +16134,7 @@ define('skylark-backbone/events',[
      on : EventedProto.on,
      once: EventedProto.once,
      stopListening: EventedProto.stopListening,
+     emit: EventedProto.emit,
      trigger: EventedProto.trigger,
      unbind: EventedProto.unbind,
      unlistenTo: EventedProto.unlistenTo
@@ -18391,8 +18384,8 @@ define('skylark-grapejs/utils/Sorter',[
             this.selectOnEnd = !o.avoidSelectOnEnd;
             this.scale = o.scale;
             this.activeTextModel = null;
-            if (this.em && this.em.undefined) {
-                this.em.undefined('change:canvasOffset', this.updateOffset);
+            if (this.em && this.em.on) {
+                this.em.on('change:canvasOffset', this.updateOffset);
                 this.updateOffset();
             }
         },
@@ -18471,9 +18464,9 @@ define('skylark-grapejs/utils/Sorter',[
             clonedEl.style.height = `${ rect.height }px`;
             ev && this.moveDragHelper(ev);
             if (this.em) {
-                $(this.em.get('Canvas').getBody().ownerDocument).undefined('mousemove', this.moveDragHelper).undefined('mousemove', this.moveDragHelper);
+                $(this.em.get('Canvas').getBody().ownerDocument).on('mousemove', this.moveDragHelper).on('mousemove', this.moveDragHelper);
             }
-            $(document).undefined('mousemove', this.moveDragHelper).undefined('mousemove', this.moveDragHelper);
+            $(document).on('mousemove', this.moveDragHelper).on('mousemove', this.moveDragHelper);
         },
         moveDragHelper(e) {
             const doc = e.target.ownerDocument;
@@ -18505,7 +18498,7 @@ define('skylark-grapejs/utils/Sorter',[
                 return;
             var elem = el.parentNode;
             while (elem && elem.nodeType === 1) {
-                if (this.undefined(elem, selector))
+                if (this.matches(elem, selector))
                     return elem;
                 elem = elem.parentNode;
             }
@@ -18542,7 +18535,7 @@ define('skylark-grapejs/utils/Sorter',[
             this.target = null;
             this.prevTarget = null;
             this.moved = 0;
-            if (src && !this.undefined(src, `${ itemSel }, ${ contSel }`)) {
+            if (src && !this.matches(src, `${ itemSel }, ${ contSel }`)) {
                 src = this.closest(src, itemSel);
             }
             this.eV = src;
@@ -18588,9 +18581,9 @@ define('skylark-grapejs/utils/Sorter',[
                         avoidStore: 1,
                         avoidUpdateStyle: 1
                     };
-                    const tempModel = comps.add(dropContent, langx.mixin({},opts,{
+                    const tempModel = comps.add(dropContent, {...opts,
                         temporary: 1
-                    }));
+                    });
                     dropModel = comps.remove(tempModel, opts);
                     dropModel = dropModel instanceof Array ? dropModel[0] : dropModel;
                     this.dropModel = dropModel;
@@ -18761,13 +18754,13 @@ define('skylark-grapejs/utils/Sorter',[
             let draggable = srcModel.get('draggable');
             draggable = draggable instanceof Array ? draggable.join(', ') : draggable;
             result.dragInfo = draggable;
-            draggable = _.isString(draggable) ? this.undefined(trg, draggable) : draggable;
+            draggable = _.isString(draggable) ? this.matches(trg, draggable) : draggable;
             result.draggable = draggable;
             let droppable = trgModel.get('droppable');
             droppable = droppable instanceof Backbone.Collection ? 1 : droppable;
             droppable = droppable instanceof Array ? droppable.join(', ') : droppable;
             result.dropInfo = droppable;
-            droppable = _.isString(droppable) ? this.undefined(src, droppable) : droppable;
+            droppable = _.isString(droppable) ? this.matches(src, droppable) : droppable;
             droppable = draggable && this.isTextableActive(srcModel, trgModel) ? 1 : droppable;
             result.droppable = droppable;
             if (!droppable || !draggable) {
@@ -18781,7 +18774,7 @@ define('skylark-grapejs/utils/Sorter',[
             if (!target) {
                 return dims;
             }
-            if (!this.undefined(target, `${ this.itemSel }, ${ this.containerSel }`)) {
+            if (!this.matches(target, `${ this.itemSel }, ${ this.containerSel }`)) {
                 target = this.closest(target, this.itemSel);
             }
             if (this.draggable instanceof Array) {
@@ -18825,7 +18818,7 @@ define('skylark-grapejs/utils/Sorter',[
             const em = this.em;
             const containerSel = this.containerSel;
             const itemSel = this.itemSel;
-            if (!this.undefined(target, `${ itemSel }, ${ containerSel }`)) {
+            if (!this.matches(target, `${ itemSel }, ${ containerSel }`)) {
                 target = this.closest(target, itemSel);
             }
             if (this.draggable instanceof Array) {
@@ -18910,7 +18903,7 @@ define('skylark-grapejs/utils/Sorter',[
             _.each(trg.children, (el, i) => {
                 const model = mixins.getModel(el, $);
                 const elIndex = model && model.index ? model.index() : i;
-                if (!mixins.isTextNode(el) && !this.undefined(el, this.itemSel)) {
+                if (!mixins.isTextNode(el) && !this.matches(el, this.itemSel)) {
                     return;
                 }
                 const dim = this.getDim(el);
@@ -19059,10 +19052,10 @@ define('skylark-grapejs/utils/Sorter',[
                     parent: srcModel && srcModel.parent(),
                     index: srcModel && srcModel.index()
                 };
-                moved.length ? moved.forEach(m => onEndMove(m, this, data)) : onEndMove(null, this, langx.mixin({},
-                    data, {
+                moved.length ? moved.forEach(m => onEndMove(m, this, data)) : onEndMove(null, this, {
+                    ...data, 
                     cancelled: 1
-                }));
+                });
             }
         },
         move(dst, src, pos) {
@@ -19090,7 +19083,7 @@ define('skylark-grapejs/utils/Sorter',[
                 };
                 if (!dropContent) {
                     opts.temporary = 1;
-                    modelTemp = targetCollection.add({}, langx.mixin({},opts ));
+                    modelTemp = targetCollection.add({}, {...opts });
                     if (model.collection) {
                         modelToDrop = model.collection.remove(model, { temporary: 1 });
                     }
@@ -20021,6 +20014,8 @@ define('skylark-grapejs/keymaps/keymaster',[],function(){
   // reset modifiers to false whenever the window is (re)focused.
   addEvent(window, 'focus', resetModifiers);
 
+  /*
+
   // store previously defined key
   var previousKey = global.key;
 
@@ -20031,7 +20026,6 @@ define('skylark-grapejs/keymaps/keymaster',[],function(){
     return k;
   }
 
-  /*
   // set window.key and window.key.set/get/deleteScope, and the default filter
   global.key = assignKey;
   global.key.setScope = setScope;
@@ -20043,6 +20037,14 @@ define('skylark-grapejs/keymaps/keymaster',[],function(){
   global.key.noConflict = noConflict;
   global.key.unbind = unbindKey;
 */
+  assignKey.setScope = setScope;
+  assignKey.getScope = getScope;
+  assignKey.deleteScope = deleteScope;
+  assignKey.filter = filter;
+  assignKey.isPressed = isPressed;
+  assignKey.getPressedKeyCodes = getPressedKeyCodes;
+  assignKey.unbind = unbindKey;
+
   return assignKey;
 
 });
@@ -20744,7 +20746,7 @@ define('skylark-grapejs/device_manager/view/DevicesView',[
         },
         render() {
             const {em, ppfx, $el, el} = this;
-            $el.html(this.undefined({
+            $el.html(this.template({
                 ppfx,
                 deviceLabel: em && em.t && em.t('deviceManager.device')
             }));
@@ -21236,10 +21238,10 @@ define('skylark-grapejs/parser/index',[
                 return conf;
             },
             init(config = {}) {
-                conf = langx.mixin({},defaults,config);
+                conf = {...defaults,...config};
                 conf.Parser = this;
-                pHtml = new parserHtml(conf);
-                pCss = new parserCss(conf);
+                pHtml =  parserHtml(conf);  // modified by lwf // new parserHtml(conf)
+                pCss = parserCss(conf); // modified by lwf  // new parserCss
                 this.em = conf.em;
                 this.parserCss = pCss;
                 this.parserHtml = pHtml;
@@ -21254,161 +21256,6 @@ define('skylark-grapejs/parser/index',[
                 return pCss.parse(str);
             }
         };
-    };
-});
-define('utils/mixins',['skylark-underscore'], function (_) {
-    'use strict';
-    const elProt = window.Element.prototype;
-    const matches = elProt.matches || elProt.webkitMatchesSelector || elProt.mozMatchesSelector || elProt.msMatchesSelector;
-    const appendStyles = (styles, opts = {}) => {
-        const stls = _.isArray(styles) ? [...styles] : [styles];
-        if (stls.length) {
-            const href = stls.shift();
-            if (href && (!opts.unique || !document.querySelector(`link[href="${ href }"]`))) {
-                const {head} = document;
-                const link = document.createElement('link');
-                link.href = href;
-                link.rel = 'stylesheet';
-                if (opts.prepand) {
-                    head.insertBefore(link, head.firstChild);
-                } else {
-                    head.appendChild(link);
-                }
-            }
-            appendStyles(stls);
-        }
-    };
-    const shallowDiff = (objOrig, objNew) => {
-        const result = {};
-        const keysNew = _.keys(objNew);
-        for (let prop in objOrig) {
-            if (objOrig.hasOwnProperty(prop)) {
-                const origValue = objOrig[prop];
-                const newValue = objNew[prop];
-                if (keysNew.indexOf(prop) >= 0) {
-                    if (origValue !== newValue) {
-                        result[prop] = newValue;
-                    }
-                } else {
-                    result[prop] = null;
-                }
-            }
-        }
-        for (let prop in objNew) {
-            if (objNew.hasOwnProperty(prop)) {
-                if (_.isUndefined(objOrig[prop])) {
-                    result[prop] = objNew[prop];
-                }
-            }
-        }
-        return result;
-    };
-    const on = (el, ev, fn) => {
-        ev = ev.split(/\s+/);
-        el = el instanceof Array ? el : [el];
-        for (let i = 0; i < ev.length; ++i) {
-            el.forEach(elem => elem.addEventListener(ev[i], fn));
-        }
-    };
-    const off = (el, ev, fn) => {
-        ev = ev.split(/\s+/);
-        el = el instanceof Array ? el : [el];
-        for (let i = 0; i < ev.length; ++i) {
-            el.forEach(elem => elem.removeEventListener(ev[i], fn));
-        }
-    };
-    const getUnitFromValue = value => {
-        return value.replace(parseFloat(value), '');
-    };
-    const upFirst = value => value[0].toUpperCase() + value.toLowerCase().slice(1);
-    const camelCase = value => {
-        const values = value.split('-').filter(String);
-        return values[0].toLowerCase() + values.slice(1).map(upFirst);
-    };
-    const normalizeFloat = (value, step = 1, valueDef = 0) => {
-        let stepDecimals = 0;
-        if (isNaN(value))
-            return valueDef;
-        value = parseFloat(value);
-        if (Math.floor(value) !== value) {
-            const side = step.toString().split('.')[1];
-            stepDecimals = side ? side.length : 0;
-        }
-        return stepDecimals ? parseFloat(value.toFixed(stepDecimals)) : value;
-    };
-    const hasDnd = em => {
-        return 'draggable' in document.createElement('i') && (em ? em.get('Config').nativeDnD : 1);
-    };
-    const getElement = el => {
-        if (_.isElement(el) || isTextNode(el)) {
-            return el;
-        } else if (el && el.getEl) {
-            return el.getEl();
-        }
-    };
-    const isTextNode = el => el && el.nodeType === 3;
-    const isCommentNode = el => el && el.nodeType === 8;
-    const isTaggableNode = el => el && !isTextNode(el) && !isCommentNode(el);
-    const getModel = (el, $) => {
-        let model = el;
-        _.isElement(el) && (model = $(el).data('model'));
-        return model;
-    };
-    const getElRect = el => {
-        const def = {
-            top: 0,
-            left: 0,
-            width: 0,
-            height: 0
-        };
-        if (!el)
-            return def;
-        let rectText;
-        if (isTextNode(el)) {
-            const range = document.createRange();
-            range.selectNode(el);
-            rectText = range.getBoundingClientRect();
-            range.detach();
-        }
-        return rectText || (el.getBoundingClientRect ? el.getBoundingClientRect() : def);
-    };
-    const getPointerEvent = ev => ev.touches && ev.touches[0] ? ev.touches[0] : ev;
-    const getKeyCode = ev => ev.which || ev.keyCode;
-    const getKeyChar = ev => String.fromCharCode(getKeyCode(ev));
-    const isEscKey = ev => getKeyCode(ev) === 27;
-    const capitalize = str => str && str.charAt(0).toUpperCase() + str.substring(1);
-    const isComponent = obj => obj && obj.toHTML;
-    const isRule = obj => obj && obj.toCSS;
-    const getViewEl = el => el.__gjsv;
-    const setViewEl = (el, view) => {
-        el.__gjsv = view;
-    };
-    return {
-        isCommentNode: isCommentNode,
-        isTaggableNode: isTaggableNode,
-        on,
-        off,
-        hasDnd,
-        upFirst,
-        matches,
-        getModel,
-        getElRect,
-        camelCase,
-        isTextNode,
-        getKeyCode,
-        getKeyChar,
-        isEscKey,
-        getElement,
-        shallowDiff,
-        normalizeFloat,
-        getPointerEvent,
-        getUnitFromValue,
-        capitalize,
-        getViewEl,
-        setViewEl,
-        appendStyles,
-        isComponent,
-        isRule
     };
 });
 define('skylark-grapejs/selector_manager/config/config',[],function () {
@@ -21499,7 +21346,7 @@ define('skylark-grapejs/selector_manager/model/Selectors',[
             return a.filter(this.models, item => item.get('active') && !item.get('private'));
         },
         getValid({noDisabled} = {}) {
-            return a.filter(this.models, item => !item.get('private')).undefined(item => noDisabled ? item.get('active') : 1);
+            return a.filter(this.models, item => !item.get('private')).filter(item => noDisabled ? item.get('active') : 1);
         },
         getFullString(collection, opts = {}) {
             const result = [];
@@ -21663,14 +21510,14 @@ define('skylark-grapejs/selector_manager/view/ClassTagsView',[
             this.stateInputC = this.pfx + 'input-c';
             this.states = this.config.states || [];
             const {em} = this.config;
+            this.em = em; // modified by lwf
             const emitter = this.getStyleEmitter();
             const coll = this.collection;
             this.target = this.config.em;
-            this.em = em;
             const toList = 'component:toggled component:update:classes';
             const toListCls = 'component:update:classes change:state';
             this.listenTo(em, toList, this.componentChanged);
-            this.listenTo(emitter, 'styleManager:update', this.componentChanged);
+            //this.listenTo(emitter, 'styleManager:update', this.componentChanged); // modified by lwf
             this.listenTo(em, toListCls, this.__handleStateChange);
             this.listenTo(em, 'styleable:change change:device', this.checkSync);
             this.listenTo(coll, 'add', this.addNew);
@@ -21919,7 +21766,7 @@ define('skylark-grapejs/selector_manager/view/ClassTagsView',[
 define('skylark-grapejs/selector_manager/index',[
     "skylark-langx/langx",
     'skylark-underscore',
-    '../../utils/mixins',
+    '../utils/mixins',
     './config/config',
     './model/Selector',
     './model/Selectors',
@@ -21939,7 +21786,7 @@ define('skylark-grapejs/selector_manager/index',[
                 return c;
             },
             init(conf = {}) {
-                c = langx.mxinin({},defaults,conf);
+                c = {...defaults,...conf};
                 const em = c.em;
                 const ppfx = c.pStylePrefix;
                 this.em = em;
@@ -21968,7 +21815,7 @@ define('skylark-grapejs/selector_manager/index',[
                 }
             },
             select(value, opts = {}) {
-                const targets = Array.undefined(value) ? value : [value];
+                const targets = Array.isArray(value) ? value : [value];
                 const toSelect = this.em.get('StyleManager').setTarget(targets, opts);
                 const res = toSelect.filter(i => i).map(sel => b.isComponent(sel) ? sel : b.isRule(sel) && !sel.get('selectorsAdd') ? sel : sel.getSelectorsString());
                 this.selectorTags.componentChanged({ targets: res });
@@ -22088,15 +21935,16 @@ define('skylark-grapejs/domain_abstract/model/TypeableCollection',[
     return {
         types: [],
         initialize(models, opts) {
-            this.model = (attrs = {}, options = {}) => {
+            var _this = this;
+            this.model = function(attrs = {}, options = {}) { // modified by lwf
                 let Model, View, type;
                 if (attrs && attrs.type) {
-                    const baseType = this.getBaseType();
-                    type = this.getType(attrs.type);
+                    const baseType = _this.getBaseType();
+                    type = _this.getType(attrs.type);
                     Model = type ? type.model : baseType.model;
                     View = type ? type.view : baseType.view;
                 } else {
-                    const typeFound = this.recognizeType(attrs);
+                    const typeFound = _this.recognizeType(attrs);
                     type = typeFound.type;
                     Model = type.model;
                     View = type.view;
@@ -22106,7 +21954,7 @@ define('skylark-grapejs/domain_abstract/model/TypeableCollection',[
                 model.typeView = View;
                 return model;
             };
-            const init = this.init && this.init.bind(this);
+            const init = _this.init && _this.init.bind(_this);
             init && init();
         },
         recognizeType(value) {
@@ -22174,7 +22022,12 @@ define('skylark-grapejs/style_manager/model/Property',[
     'skylark-backbone',
     'skylark-underscore',
     '../../utils/mixins'
-], function (langx,Backbone, a, b) {
+], function (
+    langx,
+    Backbone, 
+    a, 
+    b
+) {
     'use strict';
     const Property = Backbone.Model.extend({
         defaults: {
@@ -22316,9 +22169,12 @@ define('skylark-grapejs/style_manager/model/Property',[
 define('skylark-grapejs/style_manager/model/PropertyComposite',[
     "skylark-langx/langx",
     './Property'
-], function (langx,Property) {
+], function (
+    langx,
+    Property
+) {
     'use strict';
-    return Property.extend({
+    var PropertyComposite = Property.extend({
         defaults: {
             ...Property.prototype.defaults,
             detached: 0,
@@ -22328,8 +22184,8 @@ define('skylark-grapejs/style_manager/model/PropertyComposite',[
         initialize(props = {}, opts = {}) {
             Property.callParentInit(Property, this, props, opts);
             const properties = this.get('properties') || [];
-            const Properties = require('./Properties').default;
-            this.set('properties', new Properties(properties));
+            //const Properties = require('./Properties').default; // modified by lwf
+            this.set('properties', new PropertyComposite.Properties(properties));
             this.listenTo(this, 'change:value', this.updateValues);
             Property.callInit(this, props, opts);
         },
@@ -22367,13 +22223,14 @@ define('skylark-grapejs/style_manager/model/PropertyComposite',[
             return this.get('properties').at(index);
         }
     });
+
+    return PropertyComposite;
 });
 define('skylark-grapejs/style_manager/model/Layer',[
-    'skylark-backbone',
-    './Properties'
-], function (Backbone, Properties) {
+    'skylark-backbone'
+], function (Backbone) {
     'use strict';
-    return Backbone.Model.extend({
+    var Layer = Backbone.Model.extend({
         defaults: {
             index: '',
             value: '',
@@ -22385,7 +22242,7 @@ define('skylark-grapejs/style_manager/model/Layer',[
         initialize() {
             const prp = this.get('properties');
             var value = this.get('value');
-            this.set('properties', prp instanceof Properties ? prp : new Properties(prp));
+            this.set('properties', prp instanceof Layer.Properties ? prp : new Layer.Properties(prp));
             const props = this.get('properties');
             props.forEach(this.onPropAdd, this);
             this.listenTo(props, 'add', this.onPropAdd);
@@ -22420,6 +22277,8 @@ define('skylark-grapejs/style_manager/model/Layer',[
             return result.join(' ').trim();
         }
     });
+
+    return Layer;
 });
 define('skylark-grapejs/style_manager/model/Layers',[
     'skylark-underscore',
@@ -22514,16 +22373,20 @@ define('skylark-grapejs/style_manager/model/PropertyStack',[
     "skylark-langx/langx",
     './PropertyComposite',
     './Layers'
-], function (langx,Property, Layers) {
+], function (
+    langx,
+    Property, 
+    Layers
+) {
     'use strict';
     return Property.extend({
-        defaults: langx.mixin({},
-            ...Property.prototype.defaults,{
+        defaults: {
+            ...Property.prototype.defaults,
             layers: [],
             layerSeparator: ', ',
             prepend: 0,
             preview: 0
-        }),
+        },
         initialize(props = {}, opts = {}) {
             Property.callParentInit(Property, this, props, opts);
             const layers = this.get('layers');
@@ -22552,6 +22415,146 @@ define('skylark-grapejs/style_manager/model/PropertyStack',[
         },
         getLayersFromTarget(target) {
             return;
+        }
+    });
+});
+define('skylark-grapejs/utils/dom',['skylark-underscore'], function (_) {
+    'use strict';
+    const KEY_TAG = 'tag';
+    const KEY_ATTR = 'attributes';
+    const KEY_CHILD = 'children';
+    const motionsEv = 'transitionend oTransitionEnd transitionend webkitTransitionEnd';
+    const empty = node => {
+        while (node.firstChild)
+            node.removeChild(node.firstChild);
+    };
+    const replaceWith = (oldEl, newEl) => {
+        oldEl.parentNode.replaceChild(newEl, oldEl);
+    };
+    const appendAtIndex = (parent, child, index) => {
+        const {childNodes} = parent;
+        const total = childNodes.length;
+        const at = _.isUndefined(index) ? total : index;
+        if (_.isString(child)) {
+            parent.insertAdjacentHTML('beforeEnd', child);
+            child = parent.lastChild;
+            parent.removeChild(child);
+        }
+        if (at >= total) {
+            parent.appendChild(child);
+        } else {
+            parent.insertBefore(child, childNodes[at]);
+        }
+    };
+    const append = (parent, child) => appendAtIndex(parent, child);
+    const createEl = (tag, attrs = '', child) => {
+        const el = document.createElement(tag);
+        attrs && _.each(attrs, (value, key) => el.setAttribute(key, value));
+        if (child) {
+            if (_.isString(child))
+                el.innerHTML = child;
+            else
+                el.appendChild(child);
+        }
+        return el;
+    };
+    const createCustomEvent = (e, cls) => {
+        let oEvent;
+        try {
+            oEvent = new window[cls](e.type, e);
+        } catch (e) {
+            oEvent = document.createEvent(cls);
+            oEvent.initEvent(e.type, true, true);
+        }
+        oEvent.keyCodeVal = e.keyCode;
+        oEvent._parentEvent = e;
+        [
+            'keyCode',
+            'which'
+        ].forEach(prop => {
+            Object.defineProperty(oEvent, prop, {
+                get() {
+                    return this.keyCodeVal;
+                }
+            });
+        });
+        return oEvent;
+    };
+    const appendVNodes = (node, vNodes = []) => {
+        const vNodesArr = Array.isArray(vNodes) ? vNodes : [vNodes];
+        vNodesArr.forEach(vnode => {
+            const tag = vnode[KEY_TAG] || 'div';
+            const attr = vnode[KEY_ATTR] || {};
+            const el = document.createElement(tag);
+            _.each(attr, (value, key) => {
+                el.setAttribute(key, value);
+            });
+            node.appendChild(el);
+        });
+    };
+    return {
+        motionsEv: motionsEv,
+        empty: empty,
+        replaceWith: replaceWith,
+        appendAtIndex: appendAtIndex,
+        append: append,
+        createEl: createEl,
+        createCustomEvent: createCustomEvent,
+        appendVNodes: appendVNodes
+    };
+});
+define('skylark-grapejs/style_manager/view/PropertiesView',[
+    'skylark-backbone',
+    '../../utils/dom'
+], function (Backbone, a) {
+    'use strict';
+    return Backbone.View.extend({
+        initialize(o) {
+            this.config = o.config || {};
+            this.pfx = this.config.stylePrefix || '';
+            this.target = o.target || {};
+            this.propTarget = o.propTarget || {};
+            this.onChange = o.onChange;
+            this.onInputRender = o.onInputRender || {};
+            this.customValue = o.customValue || {};
+            this.properties = [];
+            const coll = this.collection;
+            this.listenTo(coll, 'add', this.addTo);
+            this.listenTo(coll, 'reset', this.render);
+        },
+        addTo(model, coll, opts) {
+            this.add(model, null, opts);
+        },
+        add(model, frag, opts = {}) {
+            const appendTo = frag || this.el;
+            const view = new model.typeView({
+                model,
+                name: model.get('name'),
+                id: this.pfx + model.get('property'),
+                target: this.target,
+                propTarget: this.propTarget,
+                onChange: this.onChange,
+                onInputRender: this.onInputRender,
+                config: this.config
+            });
+            if (model.get('type') != 'composite') {
+                view.customValue = this.customValue;
+            }
+            view.render();
+            const rendered = view.el;
+            this.properties.push(view);
+            view.updateVisibility();
+            a.appendAtIndex(appendTo, rendered, opts.at);
+        },
+        render() {
+            const {$el} = this;
+            this.properties = [];
+            const fragment = document.createDocumentFragment();
+            this.collection.each(model => this.add(model, fragment));
+            $el.empty();
+            $el.append(fragment);
+            $el.attr('class', `${ this.pfx }properties`);
+            return this;
         }
     });
 });
@@ -22911,8 +22914,8 @@ define('skylark-grapejs/style_manager/view/PropertyView',[
             }
             if (sectors && requires) {
                 const properties = Object.keys(requires);
-                sectors.undefined(sector => {
-                    sector.get('properties').undefined(model => {
+                sectors.each(sector => {
+                    sector.get('properties').each(model => {
                         if (a.includes(properties, model.id)) {
                             const values = requires[model.id];
                             stylable = stylable && a.includes(values, model.get('value'));
@@ -22995,8 +22998,13 @@ define('skylark-grapejs/style_manager/view/PropertyView',[
 });
 define('skylark-grapejs/style_manager/view/PropertyCompositeView',[
     'skylark-backbone',
-    './PropertyView'
-], function (Backbone, PropertyView) {
+    './PropertyView',
+    "./PropertiesView"
+], function (
+    Backbone, 
+    PropertyView,
+    PropertiesView
+) {
     'use strict';
     const $ = Backbone.$;
     return PropertyView.extend({
@@ -23039,7 +23047,7 @@ define('skylark-grapejs/style_manager/view/PropertyCompositeView',[
                         }
                         prop.parent = model;
                     }, this);
-                    var PropertiesView = require('./PropertiesView').default;
+                    //var PropertiesView = require('./PropertiesView').default;
                     var propsView = new PropertiesView(this.getPropsConfig());
                     this.$props = propsView.render().$el;
                     this.properties = propsView.properties;
@@ -23089,146 +23097,6 @@ define('skylark-grapejs/style_manager/view/PropertyCompositeView',[
             this.$input = null;
             this.props = null;
             this.$props = null;
-        }
-    });
-});
-define('skylark-grapejs/utils/dom',['skylark-underscore'], function (_) {
-    'use strict';
-    const KEY_TAG = 'tag';
-    const KEY_ATTR = 'attributes';
-    const KEY_CHILD = 'children';
-    const motionsEv = 'transitionend oTransitionEnd transitionend webkitTransitionEnd';
-    const empty = node => {
-        while (node.firstChild)
-            node.removeChild(node.firstChild);
-    };
-    const replaceWith = (oldEl, newEl) => {
-        oldEl.parentNode.replaceChild(newEl, oldEl);
-    };
-    const appendAtIndex = (parent, child, index) => {
-        const {childNodes} = parent;
-        const total = childNodes.length;
-        const at = _.isUndefined(index) ? total : index;
-        if (_.isString(child)) {
-            parent.insertAdjacentHTML('beforeEnd', child);
-            child = parent.lastChild;
-            parent.removeChild(child);
-        }
-        if (at >= total) {
-            parent.appendChild(child);
-        } else {
-            parent.insertBefore(child, childNodes[at]);
-        }
-    };
-    const append = (parent, child) => appendAtIndex(parent, child);
-    const createEl = (tag, attrs = '', child) => {
-        const el = document.createElement(tag);
-        attrs && _.each(attrs, (value, key) => el.setAttribute(key, value));
-        if (child) {
-            if (_.isString(child))
-                el.innerHTML = child;
-            else
-                el.appendChild(child);
-        }
-        return el;
-    };
-    const createCustomEvent = (e, cls) => {
-        let oEvent;
-        try {
-            oEvent = new window[cls](e.type, e);
-        } catch (e) {
-            oEvent = document.createEvent(cls);
-            oEvent.initEvent(e.type, true, true);
-        }
-        oEvent.keyCodeVal = e.keyCode;
-        oEvent._parentEvent = e;
-        [
-            'keyCode',
-            'which'
-        ].forEach(prop => {
-            Object.defineProperty(oEvent, prop, {
-                get() {
-                    return this.keyCodeVal;
-                }
-            });
-        });
-        return oEvent;
-    };
-    const appendVNodes = (node, vNodes = []) => {
-        const vNodesArr = Array.isArray(vNodes) ? vNodes : [vNodes];
-        vNodesArr.forEach(vnode => {
-            const tag = vnode[KEY_TAG] || 'div';
-            const attr = vnode[KEY_ATTR] || {};
-            const el = document.createElement(tag);
-            _.each(attr, (value, key) => {
-                el.setAttribute(key, value);
-            });
-            node.appendChild(el);
-        });
-    };
-    return {
-        motionsEv: motionsEv,
-        empty: empty,
-        replaceWith: replaceWith,
-        appendAtIndex: appendAtIndex,
-        append: append,
-        createEl: createEl,
-        createCustomEvent: createCustomEvent,
-        appendVNodes: appendVNodes
-    };
-});
-define('skylark-grapejs/style_manager/view/PropertiesView',[
-    'skylark-backbone',
-    '../../utils/dom'
-], function (Backbone, a) {
-    'use strict';
-    return Backbone.View.extend({
-        initialize(o) {
-            this.config = o.config || {};
-            this.pfx = this.config.stylePrefix || '';
-            this.target = o.target || {};
-            this.propTarget = o.propTarget || {};
-            this.onChange = o.onChange;
-            this.onInputRender = o.onInputRender || {};
-            this.customValue = o.customValue || {};
-            this.properties = [];
-            const coll = this.collection;
-            this.listenTo(coll, 'add', this.addTo);
-            this.listenTo(coll, 'reset', this.render);
-        },
-        addTo(model, coll, opts) {
-            this.add(model, null, opts);
-        },
-        add(model, frag, opts = {}) {
-            const appendTo = frag || this.el;
-            const view = new model.typeView({
-                model,
-                name: model.get('name'),
-                id: this.pfx + model.get('property'),
-                target: this.target,
-                propTarget: this.propTarget,
-                onChange: this.onChange,
-                onInputRender: this.onInputRender,
-                config: this.config
-            });
-            if (model.get('type') != 'composite') {
-                view.customValue = this.customValue;
-            }
-            view.render();
-            const rendered = view.el;
-            this.properties.push(view);
-            view.updateVisibility();
-            a.appendAtIndex(appendTo, rendered, opts.at);
-        },
-        render() {
-            const {$el} = this;
-            this.properties = [];
-            const fragment = document.createDocumentFragment();
-            this.collection.each(model => this.add(model, fragment));
-            $el.empty();
-            $el.append(fragment);
-            $el.attr('class', `${ this.pfx }properties`);
-            return this;
         }
     });
 });
@@ -23309,7 +23177,7 @@ define('skylark-grapejs/style_manager/view/LayerView',[
             const lim = 3;
             const result = [];
             const resultObj = {};
-            this.model.get('properties').undefined((prop, index) => {
+            this.model.get('properties').each((prop, index) => {
                 const property = prop.get('property');
                 let value = detach ? prop.getFullValue() : values[index] || '';
                 if (value) {
@@ -23498,14 +23366,14 @@ define('skylark-grapejs/code_manager/model/CssGenerator',[
             const wrapperIsBody = opts.wrapperIsBody;
             const isWrapper = model.get('wrapper');
             this.ids.push(`#${ model.getId() }`);
-            classes.undefined(model => this.compCls.push(model.getFullName()));
+            classes.each(model => this.compCls.push(model.getFullName()));
             if (!avoidInline && style) {
                 let selector = `#${ model.getId() }`;
                 selector = wrapperIsBody && isWrapper ? 'body' : selector;
                 code = `${ selector }{${ style }}`;
             }
             const components = model.components();
-            components.undefined(model => code += this.buildFromModel(model, opts));
+            components.each(model => code += this.buildFromModel(model, opts));
             return code;
         },
         build(model, opts = {}) {
@@ -23520,7 +23388,7 @@ define('skylark-grapejs/code_manager/model/CssGenerator',[
                 const rules = cssc.getAll();
                 const atRules = {};
                 const dump = [];
-                rules.undefined(rule => {
+                rules.each(rule => {
                     const atRule = rule.getAtRule();
                     if (atRule) {
                         const mRules = atRules[atRule];
@@ -23559,7 +23427,7 @@ define('skylark-grapejs/code_manager/model/CssGenerator',[
             const selectorsAdd = rule.get('selectorsAdd');
             const singleAtRule = rule.get('singleAtRule');
             let found;
-            rule.get('selectors').undefined(selector => {
+            rule.get('selectors').each(selector => {
                 const name = selector.getFullName();
                 if (this.compCls.indexOf(name) >= 0 || this.ids.indexOf(name) >= 0 || opts.keepUnusedStyles) {
                     found = 1;
@@ -23599,10 +23467,17 @@ define('skylark-grapejs/code_manager/model/CssGenerator',[
 });
 define('skylark-grapejs/style_manager/view/PropertyStackView',[
     'skylark-underscore',
+    "./PropertiesView",
     './PropertyCompositeView',
     './LayersView',
     '../../code_manager/model/CssGenerator'
-], function (a, PropertyCompositeView, LayersView, CssGenerator) {
+], function (
+    a, 
+    PropertiesView,
+    PropertyCompositeView, 
+    LayersView, 
+    CssGenerator
+) {
     'use strict';
     const cssGen = new CssGenerator();
     return PropertyCompositeView.extend({
@@ -23774,7 +23649,7 @@ define('skylark-grapejs/style_manager/view/PropertyStackView',[
             const self = this;
             const model = this.model;
             const fieldEl = this.el.querySelector('[data-layers-wrapper]');
-            const PropertiesView = require('./PropertiesView').default;
+            //const PropertiesView = require('./PropertiesView').default;
             const propsConfig = {
                 target: this.target,
                 propTarget: this.propTarget,
@@ -26001,7 +25876,10 @@ define('skylark-grapejs/style_manager/view/PropertyColorView',[
 define('skylark-grapejs/style_manager/model/PropertyRadio',[
     "skylark-langx/langx",
     './Property'
-], function (Property) {
+], function (
+    langx,
+    Property
+) {
     'use strict';
     return Property.extend({
         defaults: () => ({
@@ -26039,7 +25917,10 @@ define('skylark-grapejs/style_manager/model/PropertyRadio',[
 define('skylark-grapejs/style_manager/model/PropertySelect',[
     "skylark-langx/langx",
 	'./PropertyRadio'
-], function (Property) {
+], function (
+	langx,
+	Property
+) {
     'use strict';
     return Property.extend({
         defaults: () => ({
@@ -26361,7 +26242,12 @@ define('skylark-grapejs/style_manager/model/PropertyInteger',[
     'skylark-underscore',
     './Property',
     '../../domain_abstract/ui/InputNumber'
-], function (a, Property, InputNumber) {
+], function (
+    langx,
+    a, 
+    Property, 
+    InputNumber
+) {
     'use strict';
     return Property.extend({
         defaults: {
@@ -26409,7 +26295,10 @@ define('skylark-grapejs/style_manager/model/PropertyInteger',[
 define('skylark-grapejs/style_manager/model/PropertySlider',[
     "skylark-langx/langx",
 	'./PropertyInteger'
-], function (Property) {
+], function (
+	langx,
+	Property
+) {
     'use strict';
     return Property.extend({
         defaults: {
@@ -26495,10 +26384,32 @@ define('skylark-grapejs/style_manager/model/Properties',[
     './../view/PropertySliderView',
     './PropertyInteger',
     './../view/PropertyIntegerView',
-    './../view/PropertyView'
-], function (langx,Backbone, TypeableCollection, Property, PropertyStack, PropertyStackView, PropertyComposite, PropertyCompositeView, PropertyFileView, PropertyColorView, PropertySelect, PropertySelectView, PropertyRadio, PropertyRadioView, PropertySlider, PropertySliderView, PropertyInteger, PropertyIntegerView, PropertyView) {
+    './../view/PropertyView',
+    "./Layer"
+], function (
+    langx,
+    Backbone, 
+    TypeableCollection, 
+    Property, 
+    PropertyStack, 
+    PropertyStackView, 
+    PropertyComposite, 
+    PropertyCompositeView, 
+    PropertyFileView, 
+    PropertyColorView, 
+    PropertySelect, 
+    PropertySelectView, 
+    PropertyRadio, 
+    PropertyRadioView, 
+    PropertySlider, 
+    PropertySliderView, 
+    PropertyInteger, 
+    PropertyIntegerView, 
+    PropertyView,
+    Layer
+) {
     'use strict';
-    return Backbone.Collection.extend(TypeableCollection).extend({
+    var Properties = Backbone.Collection.extend(TypeableCollection).extend({
         types: [
             {
                 id: 'stack',
@@ -26616,6 +26527,13 @@ define('skylark-grapejs/style_manager/model/Properties',[
             return result.trim();
         }
     });
+
+    PropertyComposite.Properties = Properties;
+
+    Layer.Properties = Properties;
+
+
+    return Properties;
 });
 define('skylark-grapejs/style_manager/model/PropertyFactory',[],function () {
     'use strict';
@@ -27430,9 +27348,14 @@ define('skylark-grapejs/style_manager/model/Sector',[
     'skylark-underscore',
     './Properties',
     './PropertyFactory'
-], function (Backbone, a, Properties, PropertyFactory) {
+], function (
+    Backbone, 
+    a, 
+    Properties, 
+    PropertyFactory
+) {
     'use strict';
-    return Backbone.Model.undefined({
+    return Backbone.Model.extend({
         defaults: {
             id: '',
             name: '',
@@ -27489,7 +27412,7 @@ define('skylark-grapejs/style_manager/model/Sector',[
             if (!buildP.length)
                 return;
             if (!this.propFactory)
-                this.propFactory = new PropertyFactory();
+                this.propFactory = PropertyFactory(); //new PropertyFactory(); // modified by lwf
             r = this.propFactory.build(buildP);
             return r;
         }
@@ -27564,7 +27487,7 @@ define('skylark-grapejs/style_manager/view/SectorView',[
             const {pfx, model, em, $el} = this;
             const {id, name} = model.attributes;
             const label = em && em.t(`styleManager.sectors.${ id }`) || name;
-            $el.html(this.undefined({
+            $el.html(this.template({
                 pfx,
                 label
             }));
@@ -27597,7 +27520,7 @@ define('skylark-grapejs/style_manager/view/SectorsView',[
 ], function (Backbone, a, b, c, SectorView) {
     'use strict';
     const helperCls = 'hc-state';
-    return Backbone.View.undefined({
+    return Backbone.View.extend({
         initialize(o = {}) {
             const config = o.config || {};
             this.pfx = config.stylePrefix || '';
@@ -27749,7 +27672,7 @@ define('skylark-grapejs/style_manager/index',[
                 return c;
             },
             init(config) {
-                c = langx.mxinin({},defaults,conf);
+                c = {...defaults,...config};
                 const ppfx = c.pStylePrefix;
                 this.em = c.em;
                 if (ppfx)
@@ -28129,7 +28052,7 @@ define('skylark-grapejs/code_manager/model/JsonGenerator',[
                     var coll = obj;
                     json[attr] = [];
                     if (coll.length) {
-                        coll.undefined(function (el, index) {
+                        coll.each(function (el, index) {
                             json[attr][index] = this.build(el);
                         }, this);
                     }
@@ -28147,7 +28070,7 @@ define('skylark-grapejs/code_manager/model/JsGenerator',[
     'skylark-backbone'
 ], function (a, Backbone) {
     'use strict';
-    return Backbone.Model.undefined({
+    return Backbone.Model.extend({
         mapModel(model) {
             var code = '';
             var script = model.get('script-export') || model.get('script');
@@ -38741,15 +38664,6 @@ define('skylark-codemirror/CodeMirror',[
     'use strict';
     return cm.CodeMirror = _main.CodeMirror;
 });
-define('skylark-codemirror/main',[
-	"./cm",
-    "./CodeMirror"
-],function(cm){
-
-	return cm;
-});
-define('skylark-codemirror', ['skylark-codemirror/main'], function (main) { return main; });
-
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: https://codemirror.net/LICENSE
 
@@ -41039,7 +40953,7 @@ define('skylark-codemirror/mode/htmlmixed/htmlmixed',[
 });
 
 define('skylark-grapejs/code_manager/model/formating',[
-    'skylark-codemirror'
+    "skylark-codemirror/CodeMirror"
 ], function (CodeMirror) {
 
   CodeMirror.extendMode("css", {
@@ -41158,7 +41072,7 @@ define('skylark-grapejs/code_manager/model/formating',[
 define('skylark-grapejs/code_manager/model/CodeMirrorEditor',[
     'skylark-underscore',
     'skylark-backbone',
-    'skylark-codemirror',
+    "skylark-codemirror/CodeMirror",
     'skylark-codemirror/mode/htmlmixed/htmlmixed',
     'skylark-codemirror/mode/css/css',
     './formating'
@@ -41242,7 +41156,7 @@ define('skylark-grapejs/code_manager/view/EditorView',[
         render() {
             var obj = this.model.toJSON();
             obj.pfx = this.pfx;
-            this.$el.html(this.undefined(obj));
+            this.$el.html(this.template(obj));
             this.$el.attr('class', this.pfx + 'editor-c');
             this.$el.find('#' + this.pfx + 'code').append(this.model.get('input'));
             return this;
@@ -41431,7 +41345,7 @@ define('skylark-grapejs/panels/config/config',[],function () {
 });
 define('skylark-grapejs/panels/model/Button',['skylark-backbone'], function (Backbone) {
     'use strict';
-    return Backbone.Model.extend({
+    var Button =  Backbone.Model.extend({
         defaults: {
             id: '',
             label: '',
@@ -41451,18 +41365,20 @@ define('skylark-grapejs/panels/model/Button',['skylark-backbone'], function (Bac
         },
         initialize(options) {
             if (this.get('buttons').length) {
-                var Buttons = require('./Buttons').default;
+                var Buttons = Button.Buttons; //require('./Buttons').default; modified by lwf
                 this.set('buttons', new Buttons(this.get('buttons')));
             }
         }
     });
+
+    return Button;
 });
 define('skylark-grapejs/panels/model/Buttons',[
     'skylark-backbone',
     './Button'
 ], function (Backbone, Button) {
     'use strict';
-    return Backbone.Collection.extend({
+    var Buttons =  Backbone.Collection.extend({
         model: Button,
         deactivateAllExceptOne(except, r) {
             this.forEach((model, index) => {
@@ -41500,6 +41416,10 @@ define('skylark-grapejs/panels/model/Buttons',[
             });
         }
     });
+
+    Button.Buttons = Buttons;
+
+    return Buttons;
 });
 define('skylark-grapejs/panels/model/Panel',[
     'skylark-backbone',
@@ -42223,7 +42143,7 @@ define('skylark-grapejs/rich_text_editor/config/config',[],function () {
 });
 define('skylark-grapejs/rich_text_editor/index',[
     './model/RichTextEditor',
-    '../../utils/mixins',
+    '../utils/mixins',
     './config/config'
 ], function (RichTextEditor, a, defaults) {
     'use strict';
@@ -42353,8 +42273,8 @@ define('skylark-grapejs/rich_text_editor/index',[
                 if (em) {
                     setTimeout(this.updatePosition.bind(this), 0);
                     const event = 'change:canvasOffset canvasScroll frame:scroll component:update';
-                    em.undefined(event, this.updatePosition, this);
-                    em.undefined(event, this.updatePosition, this);
+                    em.on(event, this.updatePosition, this);
+                    em.on(event, this.updatePosition, this);
                     em.trigger('rte:enable', view, rte);
                 }
                 return rte;
@@ -42900,7 +42820,7 @@ define('skylark-grapejs/asset_manager/view/FileUploader',[
         },
         render() {
             const {$el, pfx, em} = this;
-            $el.html(this.undefined({
+            $el.html(this.template({
                 title: em && em.t('assetManager.uploadTitle'),
                 uploadId: this.uploadId,
                 disabled: this.disabled,
@@ -43225,7 +43145,7 @@ define('skylark-grapejs/css_composer/model/CssRule',[
             if (em) {
                 const sm = em.get('SelectorManager');
                 const slct = [];
-                selectors.undefined(selector => {
+                selectors.forEach(selector => {
                     slct.push(sm.add(selector));
                 });
                 selectors = slct;
@@ -43475,90 +43395,14 @@ define('skylark-grapejs/css_composer/view/CssRulesView',[
         }
     });
 });
-define('selector_manager/model/Selector',['skylark-backbone'], function (Backbone) {
-    'use strict';
-    const TYPE_CLASS = 1;
-    const TYPE_ID = 2;
-    const Selector = Backbone.Model.extend({
-        idAttribute: 'name',
-        defaults: {
-            name: '',
-            label: '',
-            type: TYPE_CLASS,
-            active: true,
-            private: false,
-            protected: false
-        },
-        initialize(props, opts = {}) {
-            const {
-                config = {}
-            } = opts;
-            const name = this.get('name');
-            const label = this.get('label');
-            if (!name) {
-                this.set('name', label);
-            } else if (!label) {
-                this.set('label', name);
-            }
-            const namePreEsc = this.get('name');
-            const {escapeName} = config;
-            const nameEsc = escapeName ? escapeName(namePreEsc) : Selector.escapeName(namePreEsc);
-            this.set('name', nameEsc);
-        },
-        getFullName(opts = {}) {
-            const {escape} = opts;
-            const name = this.get('name');
-            let init = '';
-            switch (this.get('type')) {
-            case TYPE_CLASS:
-                init = '.';
-                break;
-            case TYPE_ID:
-                init = '#';
-                break;
-            }
-            return init + (escape ? escape(name) : name);
-        }
-    }, {
-        TYPE_CLASS,
-        TYPE_ID,
-        escapeName(name) {
-            return `${ name }`.trim().replace(/([^a-z0-9\w-\:]+)/gi, '-');
-        }
-    });
-    return Selector;
-});
-define('selector_manager/model/Selectors',[
-    'skylark-underscore',
-    'skylark-backbone',
-    './Selector'
-], function (a, Backbone, Selector) {
-    'use strict';
-    return Backbone.Collection.extend({
-        model: Selector,
-        modelId: attr => `${ attr.name }_${ attr.type || Selector.TYPE_CLASS }`,
-        getStyleable() {
-            return a.filter(this.models, item => item.get('active') && !item.get('private'));
-        },
-        getValid({noDisabled} = {}) {
-            return a.filter(this.models, item => !item.get('private')).undefined(item => noDisabled ? item.get('active') : 1);
-        },
-        getFullString(collection, opts = {}) {
-            const result = [];
-            const coll = collection || this;
-            coll.forEach(selector => result.push(selector.getFullName(opts)));
-            return result.join('').trim();
-        }
-    });
-});
 define('skylark-grapejs/css_composer/index',[
     'skylark-underscore',
     './config/config',
     './model/CssRule',
     './model/CssRules',
     './view/CssRulesView',
-    '../../selector_manager/model/Selectors',
-    '../../selector_manager/model/Selector'
+    '../selector_manager/model/Selectors',
+    '../selector_manager/model/Selector'
 ], function (a, defaults, CssRule, CssRules, CssRulesView, Selectors, Selector) {
     'use strict';
     return () => {
@@ -43800,7 +43644,7 @@ define('skylark-grapejs/trait_manager/config/config',[],function () {
         ]
     };
 });
-define('domain_abstract/view/DomainViews',[
+define('skylark-grapejs/domain_abstract/view/DomainViews',[
     'skylark-underscore',
     'skylark-backbone'
 ], function (a, Backbone) {
@@ -43893,7 +43737,7 @@ define('domain_abstract/view/DomainViews',[
 define('skylark-grapejs/trait_manager/view/TraitView',[
     'skylark-backbone',
     'skylark-underscore',
-    'utils/mixins'
+    '../../utils/mixins'
 ], function (Backbone, a, b) {
     'use strict';
     const $ = Backbone.$;
@@ -44214,265 +44058,9 @@ define('skylark-grapejs/trait_manager/view/TraitCheckboxView',[
         }
     });
 });
-define('domain_abstract/ui/Input',['skylark-backbone'], function (Backbone) {
-    'use strict';
-    const $ = Backbone.$;
-    return Backbone.View.extend({
-        events: { change: 'handleChange' },
-        template() {
-            return `<span class="${ this.holderClass() }"></span>`;
-        },
-        inputClass() {
-            return `${ this.ppfx }field`;
-        },
-        holderClass() {
-            return `${ this.ppfx }input-holder`;
-        },
-        initialize(opts = {}) {
-            const ppfx = opts.ppfx || '';
-            this.opts = opts;
-            this.ppfx = ppfx;
-            this.em = opts.target || {};
-            this.listenTo(this.model, 'change:value', this.handleModelChange);
-        },
-        elementUpdated() {
-            this.model.trigger('el:change');
-        },
-        setValue(value) {
-            const model = this.model;
-            let val = value || model.get('defaults');
-            const input = this.getInputEl();
-            input && (input.value = val);
-        },
-        handleModelChange(model, value, opts) {
-            this.setValue(value, opts);
-        },
-        handleChange(e) {
-            e.stopPropagation();
-            const value = this.getInputEl().value;
-            this.model.set({ value }, { fromInput: 1 });
-            this.elementUpdated();
-        },
-        getInputEl() {
-            if (!this.inputEl) {
-                const {model} = this;
-                const plh = model.get('placeholder') || model.get('defaults') || '';
-                this.inputEl = $(`<input type="text" placeholder="${ plh }">`);
-            }
-            return this.inputEl.get(0);
-        },
-        render() {
-            this.inputEl = null;
-            const el = this.$el;
-            el.addClass(this.inputClass());
-            el.html(this.template());
-            el.find(`.${ this.holderClass() }`).append(this.getInputEl());
-            return this;
-        }
-    });
-});
-define('domain_abstract/ui/InputNumber',[
-    'skylark-backbone',
-    'skylark-underscore',
-    '../../utils/mixins',
-    './Input'
-], function (Backbone, a, b, Input) {
-    'use strict';
-    const $ = Backbone.$;
-    return Input.extend({
-        events: {
-            'change input': 'handleChange',
-            'change select': 'handleUnitChange',
-            'click [data-arrow-up]': 'upArrowClick',
-            'click [data-arrow-down]': 'downArrowClick',
-            'mousedown [data-arrows]': 'downIncrement'
-        },
-        template() {
-            const ppfx = this.ppfx;
-            return `
-      <span class="${ ppfx }input-holder"></span>
-      <span class="${ ppfx }field-units"></span>
-      <div class="${ ppfx }field-arrows" data-arrows>
-        <div class="${ ppfx }field-arrow-u" data-arrow-up></div>
-        <div class="${ ppfx }field-arrow-d" data-arrow-down></div>
-      </div>
-    `;
-        },
-        inputClass() {
-            const ppfx = this.ppfx;
-            return this.opts.contClass || `${ ppfx }field ${ ppfx }field-integer`;
-        },
-        initialize(opts = {}) {
-            Input.prototype.initialize.apply(this, arguments);
-            a.bindAll(this, 'moveIncrement', 'upIncrement');
-            this.doc = document;
-            this.listenTo(this.model, 'change:unit', this.handleModelChange);
-        },
-        setValue(value, opts) {
-            var opt = opts || {};
-            var valid = this.validateInputValue(value, { deepCheck: 1 });
-            var validObj = { value: valid.value };
-            if (valid.unit || valid.force) {
-                validObj.unit = valid.unit;
-            }
-            this.model.set(validObj, opt);
-            if (opt.silent) {
-                this.handleModelChange();
-            }
-        },
-        handleChange(e) {
-            e.stopPropagation();
-            this.setValue(this.getInputEl().value);
-            this.elementUpdated();
-        },
-        handleUnitChange(e) {
-            e.stopPropagation();
-            var value = this.getUnitEl().value;
-            this.model.set('unit', value);
-            this.elementUpdated();
-        },
-        elementUpdated() {
-            this.model.trigger('el:change');
-        },
-        handleModelChange() {
-            const model = this.model;
-            this.getInputEl().value = model.get('value');
-            const unitEl = this.getUnitEl();
-            unitEl && (unitEl.value = model.get('unit') || '');
-        },
-        getUnitEl() {
-            if (!this.unitEl) {
-                const model = this.model;
-                const units = model.get('units') || [];
-                if (units.length) {
-                    const options = [];
-                    units.forEach(unit => {
-                        const selected = unit == model.get('unit') ? 'selected' : '';
-                        options.push(`<option ${ selected }>${ unit }</option>`);
-                    });
-                    const temp = document.createElement('div');
-                    temp.innerHTML = `<select class="${ this.ppfx }input-unit">${ options.join('') }</select>`;
-                    this.unitEl = temp.firstChild;
-                }
-            }
-            return this.unitEl;
-        },
-        upArrowClick() {
-            const model = this.model;
-            const step = model.get('step');
-            let value = parseInt(model.get('value'), 10);
-            value = this.normalizeValue(value + step);
-            var valid = this.validateInputValue(value);
-            model.set('value', valid.value);
-            this.elementUpdated();
-        },
-        downArrowClick() {
-            const model = this.model;
-            const step = model.get('step');
-            const value = parseInt(model.get('value'), 10);
-            const val = this.normalizeValue(value - step);
-            var valid = this.validateInputValue(val);
-            model.set('value', valid.value);
-            this.elementUpdated();
-        },
-        downIncrement(e) {
-            e.preventDefault();
-            this.moved = 0;
-            var value = this.model.get('value');
-            value = this.normalizeValue(value);
-            this.current = {
-                y: e.pageY,
-                val: value
-            };
-            b.on(this.doc, 'mousemove', this.moveIncrement);
-            b.on(this.doc, 'mouseup', this.upIncrement);
-        },
-        moveIncrement(ev) {
-            this.moved = 1;
-            const model = this.model;
-            const step = model.get('step');
-            const data = this.current;
-            var pos = this.normalizeValue(data.val + (data.y - ev.pageY) * step);
-            this.prValue = this.validateInputValue(pos).value;
-            model.set('value', this.prValue, { avoidStore: 1 });
-            return false;
-        },
-        upIncrement() {
-            const model = this.model;
-            const step = model.get('step');
-            b.off(this.doc, 'mouseup', this.upIncrement);
-            b.off(this.doc, 'mousemove', this.moveIncrement);
-            if (this.prValue && this.moved) {
-                var value = this.prValue - step;
-                model.set('value', value, { avoidStore: 1 }).set('value', value + step);
-                this.elementUpdated();
-            }
-        },
-        normalizeValue(value, defValue = 0) {
-            const model = this.model;
-            const step = model.get('step');
-            let stepDecimals = 0;
-            if (isNaN(value)) {
-                return defValue;
-            }
-            value = parseFloat(value);
-            if (Math.floor(value) !== value) {
-                const side = step.toString().split('.')[1];
-                stepDecimals = side ? side.length : 0;
-            }
-            return stepDecimals ? parseFloat(value.toFixed(stepDecimals)) : value;
-        },
-        validateInputValue(value, opts) {
-            var force = 0;
-            var opt = opts || {};
-            var model = this.model;
-            const defValue = '';
-            var val = !a.isUndefined(value) ? value : defValue;
-            var units = model.get('units') || [];
-            var unit = model.get('unit') || units.length && units[0] || '';
-            var max = model.get('max');
-            var min = model.get('min');
-            if (opt.deepCheck) {
-                var fixed = model.get('fixedValues') || [];
-                if (val) {
-                    var regFixed = new RegExp('^' + fixed.join('|'), 'g');
-                    if (fixed.length && regFixed.test(val)) {
-                        val = val.match(regFixed)[0];
-                        unit = '';
-                        force = 1;
-                    } else {
-                        var valCopy = val + '';
-                        val += '';
-                        val = parseFloat(val.replace(',', '.'));
-                        val = !isNaN(val) ? val : defValue;
-                        var uN = valCopy.replace(val, '');
-                        if (a.indexOf(units, uN) >= 0)
-                            unit = uN;
-                    }
-                }
-            }
-            if (!a.isUndefined(max) && max !== '')
-                val = val > max ? max : val;
-            if (!a.isUndefined(min) && min !== '')
-                val = val < min ? min : val;
-            return {
-                force,
-                value: val,
-                unit
-            };
-        },
-        render() {
-            Input.prototype.render.call(this);
-            this.unitEl = null;
-            const unit = this.getUnitEl();
-            unit && this.$el.find(`.${ this.ppfx }field-units`).get(0).appendChild(unit);
-            return this;
-        }
-    });
-});
 define('skylark-grapejs/trait_manager/view/TraitNumberView',[
     './TraitView',
-    'domain_abstract/ui/InputNumber'
+    '../../domain_abstract/ui/InputNumber'
 ], function (TraitView, InputNumber) {
     'use strict';
     return TraitView.extend({
@@ -44500,1960 +44088,9 @@ define('skylark-grapejs/trait_manager/view/TraitNumberView',[
         }
     });
 });
-define('utils/ColorPicker',[],function () {
-    'use strict';
-    return function ($, undefined) {
-        'use strict';
-        var defaultOpts = {
-                beforeShow: noop,
-                move: noop,
-                change: noop,
-                show: noop,
-                hide: noop,
-                color: false,
-                flat: false,
-                showInput: false,
-                allowEmpty: false,
-                showButtons: true,
-                clickoutFiresChange: true,
-                showInitial: false,
-                showPalette: false,
-                showPaletteOnly: false,
-                hideAfterPaletteSelect: false,
-                togglePaletteOnly: false,
-                showSelectionPalette: true,
-                localStorageKey: false,
-                appendTo: 'body',
-                maxSelectionSize: 7,
-                cancelText: 'cancel',
-                chooseText: 'choose',
-                togglePaletteMoreText: 'more',
-                togglePaletteLessText: 'less',
-                clearText: 'Clear Color Selection',
-                noColorSelectedText: 'No Color Selected',
-                preferredFormat: false,
-                className: '',
-                containerClassName: '',
-                replacerClassName: '',
-                showAlpha: false,
-                theme: 'sp-light',
-                palette: [[
-                        '#ffffff',
-                        '#000000',
-                        '#ff0000',
-                        '#ff8000',
-                        '#ffff00',
-                        '#008000',
-                        '#0000ff',
-                        '#4b0082',
-                        '#9400d3'
-                    ]],
-                selectionPalette: [],
-                disabled: false,
-                offset: null
-            }, spectrums = [], IE = !!/msie/i.exec(window.navigator.userAgent), rgbaSupport = function () {
-                function contains(str, substr) {
-                    return !!~('' + str).indexOf(substr);
-                }
-                var elem = document.createElement('div');
-                var style = elem.style;
-                style.cssText = 'background-color:rgba(0,0,0,.5)';
-                return contains(style.backgroundColor, 'rgba') || contains(style.backgroundColor, 'hsla');
-            }(), replaceInput = [
-                "<div class='sp-replacer'>",
-                "<div class='sp-preview'><div class='sp-preview-inner'></div></div>",
-                "<div class='sp-dd'>&#9660;</div>",
-                '</div>'
-            ].join(''), markup = function () {
-                var gradientFix = '';
-                if (IE) {
-                    for (var i = 1; i <= 6; i++) {
-                        gradientFix += "<div class='sp-" + i + "'></div>";
-                    }
-                }
-                return [
-                    "<div class='sp-container sp-hidden'>",
-                    "<div class='sp-palette-container'>",
-                    "<div class='sp-palette sp-thumb sp-cf'></div>",
-                    "<div class='sp-palette-button-container sp-cf'>",
-                    "<button type='button' class='sp-palette-toggle'></button>",
-                    '</div>',
-                    '</div>',
-                    "<div class='sp-picker-container'>",
-                    "<div class='sp-top sp-cf'>",
-                    "<div class='sp-fill'></div>",
-                    "<div class='sp-top-inner'>",
-                    "<div class='sp-color'>",
-                    "<div class='sp-sat'>",
-                    "<div class='sp-val'>",
-                    "<div class='sp-dragger'></div>",
-                    '</div>',
-                    '</div>',
-                    '</div>',
-                    "<div class='sp-clear sp-clear-display'>",
-                    '</div>',
-                    "<div class='sp-hue'>",
-                    "<div class='sp-slider'></div>",
-                    gradientFix,
-                    '</div>',
-                    '</div>',
-                    "<div class='sp-alpha'><div class='sp-alpha-inner'><div class='sp-alpha-handle'></div></div></div>",
-                    '</div>',
-                    "<div class='sp-input-container sp-cf'>",
-                    "<input class='sp-input' type='text' spellcheck='false'  />",
-                    '</div>',
-                    "<div class='sp-initial sp-thumb sp-cf'></div>",
-                    "<div class='sp-button-container sp-cf'>",
-                    "<a class='sp-cancel' href='#'></a>",
-                    "<button type='button' class='sp-choose'></button>",
-                    '</div>',
-                    '</div>',
-                    '</div>'
-                ].join('');
-            }();
-        function paletteTemplate(p, color, className, opts) {
-            var html = [];
-            for (var i = 0; i < p.length; i++) {
-                var current = p[i];
-                if (current) {
-                    var tiny = tinycolor(current);
-                    var c = tiny.toHsl().l < 0.5 ? 'sp-thumb-el sp-thumb-dark' : 'sp-thumb-el sp-thumb-light';
-                    c += tinycolor.equals(color, current) ? ' sp-thumb-active' : '';
-                    var formattedString = tiny.toString(opts.preferredFormat || 'rgb');
-                    var swatchStyle = rgbaSupport ? 'background-color:' + tiny.toRgbString() : 'filter:' + tiny.toFilter();
-                    html.push('<span title="' + formattedString + '" data-color="' + tiny.toRgbString() + '" class="' + c + '"><span class="sp-thumb-inner" style="' + swatchStyle + ';"></span></span>');
-                } else {
-                    var cls = 'sp-clear-display';
-                    html.push($('<div />').append($('<span data-color="" style="background-color:transparent;" class="' + cls + '"></span>').attr('title', opts.noColorSelectedText)).html());
-                }
-            }
-            return "<div class='sp-cf " + className + "'>" + html.join('') + '</div>';
-        }
-        function hideAll() {
-            for (var i = 0; i < spectrums.length; i++) {
-                if (spectrums[i]) {
-                    spectrums[i].hide();
-                }
-            }
-        }
-        function instanceOptions(o, callbackContext) {
-            var opts = $.extend({}, defaultOpts, o);
-            opts.callbacks = {
-                move: bind(opts.move, callbackContext),
-                change: bind(opts.change, callbackContext),
-                show: bind(opts.show, callbackContext),
-                hide: bind(opts.hide, callbackContext),
-                beforeShow: bind(opts.beforeShow, callbackContext)
-            };
-            return opts;
-        }
-        function spectrum(element, o) {
-            var opts = instanceOptions(o, element), flat = opts.flat, showSelectionPalette = opts.showSelectionPalette, localStorageKey = opts.localStorageKey, theme = opts.theme, callbacks = opts.callbacks, resize = throttle(reflow, 10), visible = false, isDragging = false, dragWidth = 0, dragHeight = 0, dragHelperHeight = 0, slideHeight = 0, slideWidth = 0, alphaWidth = 0, alphaSlideHelperWidth = 0, slideHelperHeight = 0, currentHue = 0, currentSaturation = 0, currentValue = 0, currentAlpha = 1, palette = [], paletteArray = [], paletteLookup = {}, selectionPalette = opts.selectionPalette.slice(0), maxSelectionSize = opts.maxSelectionSize, draggingClass = 'sp-dragging', shiftMovementDirection = null;
-            var doc = element.ownerDocument, body = doc.body, boundElement = $(element), disabled = false, container = $(markup, doc).addClass(theme), pickerContainer = container.find('.sp-picker-container'), dragger = container.find('.sp-color'), dragHelper = container.find('.sp-dragger'), slider = container.find('.sp-hue'), slideHelper = container.find('.sp-slider'), alphaSliderInner = container.find('.sp-alpha-inner'), alphaSlider = container.find('.sp-alpha'), alphaSlideHelper = container.find('.sp-alpha-handle'), textInput = container.find('.sp-input'), paletteContainer = container.find('.sp-palette'), initialColorContainer = container.find('.sp-initial'), cancelButton = container.find('.sp-cancel'), clearButton = container.find('.sp-clear'), chooseButton = container.find('.sp-choose'), toggleButton = container.find('.sp-palette-toggle'), isInput = boundElement.is('input'), isInputTypeColor = isInput && boundElement.attr('type') === 'color' && inputTypeColorSupport(), shouldReplace = isInput && !flat, replacer = shouldReplace ? $(replaceInput).addClass(theme).addClass(opts.className).addClass(opts.replacerClassName) : $([]), offsetElement = shouldReplace ? replacer : boundElement, previewElement = replacer.find('.sp-preview-inner'), initialColor = opts.color || isInput && boundElement.val(), colorOnShow = false, currentPreferredFormat = opts.preferredFormat, clickoutFiresChange = !opts.showButtons || opts.clickoutFiresChange, isEmpty = !initialColor, allowEmpty = opts.allowEmpty && !isInputTypeColor;
-            function applyOptions() {
-                if (opts.showPaletteOnly) {
-                    opts.showPalette = true;
-                }
-                toggleButton.text(opts.showPaletteOnly ? opts.togglePaletteMoreText : opts.togglePaletteLessText);
-                if (opts.palette) {
-                    palette = opts.palette.slice(0);
-                    paletteArray = $.isArray(palette[0]) ? palette : [palette];
-                    paletteLookup = {};
-                    for (var i = 0; i < paletteArray.length; i++) {
-                        for (var j = 0; j < paletteArray[i].length; j++) {
-                            var rgb = tinycolor(paletteArray[i][j]).toRgbString();
-                            paletteLookup[rgb] = true;
-                        }
-                    }
-                }
-                container.toggleClass('sp-flat', flat);
-                container.toggleClass('sp-input-disabled', !opts.showInput);
-                container.toggleClass('sp-alpha-enabled', opts.showAlpha);
-                container.toggleClass('sp-clear-enabled', allowEmpty);
-                container.toggleClass('sp-buttons-disabled', !opts.showButtons);
-                container.toggleClass('sp-palette-buttons-disabled', !opts.togglePaletteOnly);
-                container.toggleClass('sp-palette-disabled', !opts.showPalette);
-                container.toggleClass('sp-palette-only', opts.showPaletteOnly);
-                container.toggleClass('sp-initial-disabled', !opts.showInitial);
-                container.addClass(opts.className).addClass(opts.containerClassName);
-                reflow();
-            }
-            function initialize() {
-                if (IE) {
-                    container.find('*:not(input)').attr('unselectable', 'on');
-                }
-                applyOptions();
-                if (shouldReplace) {
-                    boundElement.after(replacer).hide();
-                }
-                if (!allowEmpty) {
-                    clearButton.hide();
-                }
-                if (flat) {
-                    boundElement.after(container).hide();
-                } else {
-                    var appendTo = opts.appendTo === 'parent' ? boundElement.parent() : $(opts.appendTo);
-                    if (appendTo.length !== 1) {
-                        appendTo = $('body');
-                    }
-                    appendTo.append(container);
-                }
-                updateSelectionPaletteFromStorage();
-                offsetElement.bind('click.spectrum touchstart.spectrum', function (e) {
-                    if (!disabled) {
-                        toggle();
-                    }
-                    e.stopPropagation();
-                    if (!$(e.target).is('input')) {
-                        e.preventDefault();
-                    }
-                });
-                if (boundElement.is(':disabled') || opts.disabled === true) {
-                    disable();
-                }
-                container.click(stopPropagation);
-                textInput.change(setFromTextInput);
-                textInput.bind('paste', function () {
-                    setTimeout(setFromTextInput, 1);
-                });
-                textInput.keydown(function (e) {
-                    if (e.keyCode == 13) {
-                        setFromTextInput();
-                    }
-                });
-                cancelButton.text(opts.cancelText);
-                cancelButton.bind('click.spectrum', function (e) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    revert();
-                    hide();
-                });
-                clearButton.attr('title', opts.clearText);
-                clearButton.bind('click.spectrum', function (e) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    isEmpty = true;
-                    move();
-                    if (flat) {
-                        updateOriginalInput(true);
-                    }
-                });
-                chooseButton.text(opts.chooseText);
-                chooseButton.bind('click.spectrum', function (e) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    if (IE && textInput.is(':focus')) {
-                        textInput.trigger('change');
-                    }
-                    if (isValid()) {
-                        updateOriginalInput(true);
-                        hide();
-                    }
-                });
-                toggleButton.text(opts.showPaletteOnly ? opts.togglePaletteMoreText : opts.togglePaletteLessText);
-                toggleButton.bind('click.spectrum', function (e) {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    opts.showPaletteOnly = !opts.showPaletteOnly;
-                    if (!opts.showPaletteOnly && !flat) {
-                        container.css('left', '-=' + (pickerContainer.outerWidth(true) + 5));
-                    }
-                    applyOptions();
-                });
-                draggable(alphaSlider, function (dragX, dragY, e) {
-                    currentAlpha = dragX / alphaWidth;
-                    isEmpty = false;
-                    if (e.shiftKey) {
-                        currentAlpha = Math.round(currentAlpha * 10) / 10;
-                    }
-                    move();
-                }, dragStart, dragStop);
-                draggable(slider, function (dragX, dragY) {
-                    currentHue = parseFloat(dragY / slideHeight);
-                    isEmpty = false;
-                    if (!opts.showAlpha) {
-                        currentAlpha = 1;
-                    }
-                    move();
-                }, dragStart, dragStop);
-                draggable(dragger, function (dragX, dragY, e) {
-                    if (!e.shiftKey) {
-                        shiftMovementDirection = null;
-                    } else if (!shiftMovementDirection) {
-                        var oldDragX = currentSaturation * dragWidth;
-                        var oldDragY = dragHeight - currentValue * dragHeight;
-                        var furtherFromX = Math.abs(dragX - oldDragX) > Math.abs(dragY - oldDragY);
-                        shiftMovementDirection = furtherFromX ? 'x' : 'y';
-                    }
-                    var setSaturation = !shiftMovementDirection || shiftMovementDirection === 'x';
-                    var setValue = !shiftMovementDirection || shiftMovementDirection === 'y';
-                    if (setSaturation) {
-                        currentSaturation = parseFloat(dragX / dragWidth);
-                    }
-                    if (setValue) {
-                        currentValue = parseFloat((dragHeight - dragY) / dragHeight);
-                    }
-                    isEmpty = false;
-                    if (!opts.showAlpha) {
-                        currentAlpha = 1;
-                    }
-                    move();
-                }, dragStart, dragStop);
-                if (!!initialColor) {
-                    set(initialColor);
-                    updateUI();
-                    currentPreferredFormat = opts.preferredFormat || tinycolor(initialColor).format;
-                    addColorToSelectionPalette(initialColor);
-                } else {
-                    updateUI();
-                }
-                if (flat) {
-                    show();
-                }
-                function paletteElementClick(e) {
-                    if (e.data && e.data.ignore) {
-                        set($(e.target).closest('.sp-thumb-el').data('color'));
-                        move();
-                    } else {
-                        set($(e.target).closest('.sp-thumb-el').data('color'));
-                        move();
-                        updateOriginalInput(true);
-                        if (opts.hideAfterPaletteSelect) {
-                            hide();
-                        }
-                    }
-                    return false;
-                }
-                var paletteEvent = IE ? 'mousedown.spectrum' : 'click.spectrum touchstart.spectrum';
-                paletteContainer.delegate('.sp-thumb-el', paletteEvent, paletteElementClick);
-                initialColorContainer.delegate('.sp-thumb-el:nth-child(1)', paletteEvent, { ignore: true }, paletteElementClick);
-            }
-            function updateSelectionPaletteFromStorage() {
-                if (localStorageKey && window.localStorage) {
-                    try {
-                        var oldPalette = window.localStorage[localStorageKey].split(',#');
-                        if (oldPalette.length > 1) {
-                            delete window.localStorage[localStorageKey];
-                            $.each(oldPalette, function (i, c) {
-                                addColorToSelectionPalette(c);
-                            });
-                        }
-                    } catch (e) {
-                    }
-                    try {
-                        selectionPalette = window.localStorage[localStorageKey].split(';');
-                    } catch (e) {
-                    }
-                }
-            }
-            function addColorToSelectionPalette(color) {
-                if (showSelectionPalette) {
-                    var rgb = tinycolor(color).toRgbString();
-                    if (!paletteLookup[rgb] && $.inArray(rgb, selectionPalette) === -1) {
-                        selectionPalette.push(rgb);
-                        while (selectionPalette.length > maxSelectionSize) {
-                            selectionPalette.shift();
-                        }
-                    }
-                    if (localStorageKey && window.localStorage) {
-                        try {
-                            window.localStorage[localStorageKey] = selectionPalette.join(';');
-                        } catch (e) {
-                        }
-                    }
-                }
-            }
-            function getUniqueSelectionPalette() {
-                var unique = [];
-                if (opts.showPalette) {
-                    for (var i = 0; i < selectionPalette.length; i++) {
-                        var rgb = tinycolor(selectionPalette[i]).toRgbString();
-                        if (!paletteLookup[rgb]) {
-                            unique.push(selectionPalette[i]);
-                        }
-                    }
-                }
-                return unique.reverse().slice(0, opts.maxSelectionSize);
-            }
-            function drawPalette() {
-                var currentColor = get();
-                var html = $.map(paletteArray, function (palette, i) {
-                    return paletteTemplate(palette, currentColor, 'sp-palette-row sp-palette-row-' + i, opts);
-                });
-                updateSelectionPaletteFromStorage();
-                if (selectionPalette) {
-                    html.push(paletteTemplate(getUniqueSelectionPalette(), currentColor, 'sp-palette-row sp-palette-row-selection', opts));
-                }
-                paletteContainer.html(html.join(''));
-            }
-            function drawInitial() {
-                if (opts.showInitial) {
-                    var initial = colorOnShow;
-                    var current = get();
-                    initialColorContainer.html(paletteTemplate([
-                        initial,
-                        current
-                    ], current, 'sp-palette-row-initial', opts));
-                }
-            }
-            function dragStart() {
-                if (dragHeight <= 0 || dragWidth <= 0 || slideHeight <= 0) {
-                    reflow();
-                }
-                isDragging = true;
-                container.addClass(draggingClass);
-                shiftMovementDirection = null;
-                boundElement.trigger('dragstart.spectrum', [get()]);
-            }
-            function dragStop() {
-                isDragging = false;
-                container.removeClass(draggingClass);
-                boundElement.trigger('dragstop.spectrum', [get()]);
-            }
-            function setFromTextInput() {
-                var value = textInput.val();
-                if ((value === null || value === '') && allowEmpty) {
-                    set(null);
-                    updateOriginalInput(true);
-                } else {
-                    var tiny = tinycolor(value);
-                    if (tiny.isValid()) {
-                        set(tiny);
-                        updateOriginalInput(true);
-                    } else {
-                        textInput.addClass('sp-validation-error');
-                    }
-                }
-            }
-            function toggle() {
-                if (visible) {
-                    hide();
-                } else {
-                    show();
-                }
-            }
-            function show() {
-                var event = $.Event('beforeShow.spectrum');
-                if (visible) {
-                    reflow();
-                    return;
-                }
-                boundElement.trigger('beforeShow.spectrum', [get()]);
-                if (callbacks.beforeShow(get()) === false || event.isDefaultPrevented()) {
-                    return;
-                }
-                hideAll();
-                visible = true;
-                var $doc = $(doc);
-                $doc.bind('keydown.spectrum', onkeydown);
-                $doc.bind('click.spectrum', clickout);
-                $(window).bind('resize.spectrum', resize);
-                replacer.addClass('sp-active');
-                container.removeClass('sp-hidden');
-                reflow();
-                updateUI();
-                colorOnShow = get();
-                drawInitial();
-                callbacks.show(colorOnShow);
-                boundElement.trigger('show.spectrum', [colorOnShow]);
-            }
-            function onkeydown(e) {
-                if (e.keyCode === 27) {
-                    hide();
-                }
-            }
-            function clickout(e) {
-                if (e.button == 2) {
-                    return;
-                }
-                if (isDragging) {
-                    return;
-                }
-                if (clickoutFiresChange) {
-                    updateOriginalInput(true);
-                } else {
-                    revert();
-                }
-                hide();
-            }
-            function hide() {
-                if (!visible || flat) {
-                    return;
-                }
-                visible = false;
-                $(doc).unbind('keydown.spectrum', onkeydown);
-                $(doc).unbind('click.spectrum', clickout);
-                $(window).unbind('resize.spectrum', resize);
-                replacer.removeClass('sp-active');
-                container.addClass('sp-hidden');
-                callbacks.hide(get());
-                boundElement.trigger('hide.spectrum', [get()]);
-            }
-            function revert() {
-                set(colorOnShow, true);
-            }
-            function set(color, ignoreFormatChange) {
-                if (tinycolor.equals(color, get())) {
-                    updateUI();
-                    return;
-                }
-                var newColor, newHsv;
-                if (!color && allowEmpty) {
-                    isEmpty = true;
-                } else {
-                    isEmpty = false;
-                    newColor = tinycolor(color);
-                    newHsv = newColor.toHsv();
-                    currentHue = newHsv.h % 360 / 360;
-                    currentSaturation = newHsv.s;
-                    currentValue = newHsv.v;
-                    currentAlpha = newHsv.a;
-                }
-                updateUI();
-                if (newColor && newColor.isValid() && !ignoreFormatChange) {
-                    currentPreferredFormat = opts.preferredFormat || newColor.getFormat();
-                }
-            }
-            function get(opts) {
-                opts = opts || {};
-                if (allowEmpty && isEmpty) {
-                    return null;
-                }
-                return tinycolor.fromRatio({
-                    h: currentHue,
-                    s: currentSaturation,
-                    v: currentValue,
-                    a: Math.round(currentAlpha * 100) / 100
-                }, { format: opts.format || currentPreferredFormat });
-            }
-            function isValid() {
-                return !textInput.hasClass('sp-validation-error');
-            }
-            function move() {
-                updateUI();
-                callbacks.move(get());
-                boundElement.trigger('move.spectrum', [get()]);
-            }
-            function updateUI() {
-                textInput.removeClass('sp-validation-error');
-                updateHelperLocations();
-                var flatColor = tinycolor.fromRatio({
-                    h: currentHue,
-                    s: 1,
-                    v: 1
-                });
-                dragger.css('background-color', flatColor.toHexString());
-                var format = currentPreferredFormat;
-                if (currentAlpha < 1 && !(currentAlpha === 0 && format === 'name')) {
-                    if (format === 'hex' || format === 'hex3' || format === 'hex6' || format === 'name') {
-                        format = 'rgb';
-                    }
-                }
-                var realColor = get({ format: format }), displayColor = '';
-                previewElement.removeClass('sp-clear-display');
-                previewElement.css('background-color', 'transparent');
-                if (!realColor && allowEmpty) {
-                    previewElement.addClass('sp-clear-display');
-                } else {
-                    var realHex = realColor.toHexString(), realRgb = realColor.toRgbString();
-                    if (rgbaSupport || realColor.alpha === 1) {
-                        previewElement.css('background-color', realRgb);
-                    } else {
-                        previewElement.css('background-color', 'transparent');
-                        previewElement.css('filter', realColor.toFilter());
-                    }
-                    if (opts.showAlpha) {
-                        var rgb = realColor.toRgb();
-                        rgb.a = 0;
-                        var realAlpha = tinycolor(rgb).toRgbString();
-                        var gradient = 'linear-gradient(left, ' + realAlpha + ', ' + realHex + ')';
-                        if (IE) {
-                            alphaSliderInner.css('filter', tinycolor(realAlpha).toFilter({ gradientType: 1 }, realHex));
-                        } else {
-                            alphaSliderInner.css('background', '-webkit-' + gradient);
-                            alphaSliderInner.css('background', '-moz-' + gradient);
-                            alphaSliderInner.css('background', '-ms-' + gradient);
-                            alphaSliderInner.css('background', 'linear-gradient(to right, ' + realAlpha + ', ' + realHex + ')');
-                        }
-                    }
-                    displayColor = realColor.toString(format);
-                }
-                if (opts.showInput) {
-                    textInput.val(displayColor);
-                }
-                if (opts.showPalette) {
-                    drawPalette();
-                }
-                drawInitial();
-            }
-            function updateHelperLocations() {
-                var s = currentSaturation;
-                var v = currentValue;
-                if (allowEmpty && isEmpty) {
-                    alphaSlideHelper.hide();
-                    slideHelper.hide();
-                    dragHelper.hide();
-                } else {
-                    alphaSlideHelper.show();
-                    slideHelper.show();
-                    dragHelper.show();
-                    var dragX = s * dragWidth;
-                    var dragY = dragHeight - v * dragHeight;
-                    dragX = Math.max(-dragHelperHeight, Math.min(dragWidth - dragHelperHeight, dragX - dragHelperHeight));
-                    dragY = Math.max(-dragHelperHeight, Math.min(dragHeight - dragHelperHeight, dragY - dragHelperHeight));
-                    dragHelper.css({
-                        top: dragY + 'px',
-                        left: dragX + 'px'
-                    });
-                    var alphaX = currentAlpha * alphaWidth;
-                    alphaSlideHelper.css({ left: alphaX - alphaSlideHelperWidth / 2 + 'px' });
-                    var slideY = currentHue * slideHeight;
-                    slideHelper.css({ top: slideY - slideHelperHeight + 'px' });
-                }
-            }
-            function updateOriginalInput(fireCallback) {
-                var color = get(), displayColor = '', hasChanged = !tinycolor.equals(color, colorOnShow);
-                if (color) {
-                    displayColor = color.toString(currentPreferredFormat);
-                    addColorToSelectionPalette(color);
-                }
-                if (isInput) {
-                    boundElement.val(displayColor);
-                }
-                if (fireCallback && hasChanged) {
-                    callbacks.change(color);
-                    boundElement.trigger('change', [color]);
-                }
-            }
-            function reflow() {
-                if (!visible) {
-                    return;
-                }
-                dragWidth = dragger.width();
-                dragHeight = dragger.height();
-                dragHelperHeight = dragHelper.height();
-                slideWidth = slider.width();
-                slideHeight = slider.height();
-                slideHelperHeight = slideHelper.height();
-                alphaWidth = alphaSlider.width();
-                alphaSlideHelperWidth = alphaSlideHelper.width();
-                if (!flat) {
-                    container.css('position', 'absolute');
-                    if (opts.offset) {
-                        container.offset(opts.offset);
-                    } else {
-                        container.offset(getOffset(container, offsetElement));
-                    }
-                }
-                updateHelperLocations();
-                if (opts.showPalette) {
-                    drawPalette();
-                }
-                boundElement.trigger('reflow.spectrum');
-            }
-            function destroy() {
-                boundElement.show();
-                offsetElement.unbind('click.spectrum touchstart.spectrum');
-                container.remove();
-                replacer.remove();
-                spectrums[spect.id] = null;
-            }
-            function option(optionName, optionValue) {
-                if (optionName === undefined) {
-                    return $.extend({}, opts);
-                }
-                if (optionValue === undefined) {
-                    return opts[optionName];
-                }
-                opts[optionName] = optionValue;
-                if (optionName === 'preferredFormat') {
-                    currentPreferredFormat = opts.preferredFormat;
-                }
-                applyOptions();
-            }
-            function enable() {
-                disabled = false;
-                boundElement.attr('disabled', false);
-                offsetElement.removeClass('sp-disabled');
-            }
-            function disable() {
-                hide();
-                disabled = true;
-                boundElement.attr('disabled', true);
-                offsetElement.addClass('sp-disabled');
-            }
-            function setOffset(coord) {
-                opts.offset = coord;
-                reflow();
-            }
-            initialize();
-            var spect = {
-                show: show,
-                hide: hide,
-                toggle: toggle,
-                reflow: reflow,
-                option: option,
-                enable: enable,
-                disable: disable,
-                offset: setOffset,
-                set: function (c) {
-                    set(c);
-                    updateOriginalInput();
-                },
-                get: get,
-                destroy: destroy,
-                container: container
-            };
-            spect.id = spectrums.push(spect) - 1;
-            return spect;
-        }
-        function getOffset(picker, input) {
-            var extraY = 0;
-            var dpWidth = picker.outerWidth();
-            var dpHeight = picker.outerHeight();
-            var inputHeight = input.outerHeight();
-            var doc = picker[0].ownerDocument;
-            var docElem = doc.documentElement;
-            var cW = docElem.clientWidth;
-            var cH = docElem.clientHeight;
-            var scL = $(doc).scrollLeft();
-            var scT = $(doc).scrollTop();
-            var viewWidth = cW + scL;
-            var viewHeight = cH + scT;
-            var offset = input.offset();
-            offset.top += inputHeight;
-            offset.left -= Math.min(offset.left, offset.left + dpWidth > viewWidth && viewWidth > dpWidth ? Math.abs(offset.left + dpWidth - viewWidth) : 0);
-            offset.top -= Math.min(offset.top, offset.top + dpHeight > viewHeight && viewHeight > dpHeight ? Math.abs(dpHeight + inputHeight - extraY) : extraY);
-            return offset;
-        }
-        function noop() {
-        }
-        function stopPropagation(e) {
-            e.stopPropagation();
-        }
-        function bind(func, obj) {
-            var slice = Array.prototype.slice;
-            var args = slice.call(arguments, 2);
-            return function () {
-                return func.apply(obj, args.concat(slice.call(arguments)));
-            };
-        }
-        function draggable(element, onmove, onstart, onstop) {
-            onmove = onmove || function () {
-            };
-            onstart = onstart || function () {
-            };
-            onstop = onstop || function () {
-            };
-            var doc = document;
-            var dragging = false;
-            var offset = {};
-            var maxHeight = 0;
-            var maxWidth = 0;
-            var hasTouch = 'ontouchstart' in window;
-            var duringDragEvents = {};
-            duringDragEvents['selectstart'] = prevent;
-            duringDragEvents['dragstart'] = prevent;
-            duringDragEvents['touchmove mousemove'] = move;
-            duringDragEvents['touchend mouseup'] = stop;
-            function prevent(e) {
-                if (e.stopPropagation) {
-                    e.stopPropagation();
-                }
-                if (e.preventDefault) {
-                    e.preventDefault();
-                }
-                e.returnValue = false;
-            }
-            function move(e) {
-                if (dragging) {
-                    if (IE && doc.documentMode < 9 && !e.button) {
-                        return stop();
-                    }
-                    var t0 = e && e.touches && e.touches[0];
-                    var pageX = t0 && t0.pageX || e.pageX;
-                    var pageY = t0 && t0.pageY || e.pageY;
-                    var dragX = Math.max(0, Math.min(pageX - offset.left, maxWidth));
-                    var dragY = Math.max(0, Math.min(pageY - offset.top, maxHeight));
-                    if (hasTouch) {
-                        prevent(e);
-                    }
-                    onmove.apply(element, [
-                        dragX,
-                        dragY,
-                        e
-                    ]);
-                }
-            }
-            function start(e) {
-                var rightclick = e.which ? e.which == 3 : e.button == 2;
-                if (!rightclick && !dragging) {
-                    if (onstart.apply(element, arguments) !== false) {
-                        dragging = true;
-                        maxHeight = $(element).height();
-                        maxWidth = $(element).width();
-                        offset = $(element).offset();
-                        $(doc).bind(duringDragEvents);
-                        $(doc.body).addClass('sp-dragging');
-                        move(e);
-                        prevent(e);
-                    }
-                }
-            }
-            function stop() {
-                if (dragging) {
-                    $(doc).unbind(duringDragEvents);
-                    $(doc.body).removeClass('sp-dragging');
-                    setTimeout(function () {
-                        onstop.apply(element, arguments);
-                    }, 0);
-                }
-                dragging = false;
-            }
-            $(element).bind('touchstart mousedown', start);
-        }
-        function throttle(func, wait, debounce) {
-            var timeout;
-            return function () {
-                var context = this, args = arguments;
-                var throttler = function () {
-                    timeout = null;
-                    func.apply(context, args);
-                };
-                if (debounce)
-                    clearTimeout(timeout);
-                if (debounce || !timeout)
-                    timeout = setTimeout(throttler, wait);
-            };
-        }
-        function inputTypeColorSupport() {
-            return $.fn.spectrum.inputTypeColorSupport();
-        }
-        var dataID = 'spectrum.id';
-        $.fn.spectrum = function (opts, extra) {
-            if (typeof opts == 'string') {
-                var returnValue = this;
-                var args = Array.prototype.slice.call(arguments, 1);
-                this.each(function () {
-                    var spect = spectrums[$(this).data(dataID)];
-                    if (spect) {
-                        var method = spect[opts];
-                        if (!method) {
-                            throw new Error("Spectrum: no such method: '" + opts + "'");
-                        }
-                        if (opts == 'get') {
-                            returnValue = spect.get();
-                        } else if (opts == 'container') {
-                            returnValue = spect.container;
-                        } else if (opts == 'option') {
-                            returnValue = spect.option.apply(spect, args);
-                        } else if (opts == 'destroy') {
-                            spect.destroy();
-                            $(this).removeData(dataID);
-                        } else {
-                            method.apply(spect, args);
-                        }
-                    }
-                });
-                return returnValue;
-            }
-            return this.spectrum('destroy').each(function () {
-                var options = $.extend({}, opts, $(this).data());
-                var spect = spectrum(this, options);
-                $(this).data(dataID, spect.id);
-            });
-        };
-        $.fn.spectrum.load = true;
-        $.fn.spectrum.loadOpts = {};
-        $.fn.spectrum.draggable = draggable;
-        $.fn.spectrum.defaults = defaultOpts;
-        $.fn.spectrum.inputTypeColorSupport = function inputTypeColorSupport() {
-            if (typeof inputTypeColorSupport._cachedResult === 'undefined') {
-                var colorInput = $("<input type='color'/>")[0];
-                inputTypeColorSupport._cachedResult = colorInput.type === 'color' && colorInput.value !== '';
-            }
-            return inputTypeColorSupport._cachedResult;
-        };
-        $.spectrum = {};
-        $.spectrum.localization = {};
-        $.spectrum.palettes = {};
-        $.fn.spectrum.processNativeColorInputs = function () {
-            var colorInputs = $('input[type=color]');
-            if (colorInputs.length && !inputTypeColorSupport()) {
-                colorInputs.spectrum({ preferredFormat: 'hex6' });
-            }
-        };
-        var trimLeft = /^[\s,#]+/, trimRight = /\s+$/, tinyCounter = 0, math = Math, mathRound = math.round, mathMin = math.min, mathMax = math.max, mathRandom = math.random;
-        var tinycolor = function (color, opts) {
-            color = color ? color : '';
-            opts = opts || {};
-            if (color instanceof tinycolor) {
-                return color;
-            }
-            if (!(this instanceof tinycolor)) {
-                return new tinycolor(color, opts);
-            }
-            var rgb = inputToRGB(color);
-            this._originalInput = color, this._r = rgb.r, this._g = rgb.g, this._b = rgb.b, this._a = rgb.a, this._roundA = mathRound(100 * this._a) / 100, this._format = opts.format || rgb.format;
-            this._gradientType = opts.gradientType;
-            if (this._r < 1) {
-                this._r = mathRound(this._r);
-            }
-            if (this._g < 1) {
-                this._g = mathRound(this._g);
-            }
-            if (this._b < 1) {
-                this._b = mathRound(this._b);
-            }
-            this._ok = rgb.ok;
-            this._tc_id = tinyCounter++;
-        };
-        tinycolor.prototype = {
-            isDark: function () {
-                return this.getBrightness() < 128;
-            },
-            isLight: function () {
-                return !this.isDark();
-            },
-            isValid: function () {
-                return this._ok;
-            },
-            getOriginalInput: function () {
-                return this._originalInput;
-            },
-            getFormat: function () {
-                return this._format;
-            },
-            getAlpha: function () {
-                return this._a;
-            },
-            getBrightness: function () {
-                var rgb = this.toRgb();
-                return (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
-            },
-            setAlpha: function (value) {
-                this._a = boundAlpha(value);
-                this._roundA = mathRound(100 * this._a) / 100;
-                return this;
-            },
-            toHsv: function () {
-                var hsv = rgbToHsv(this._r, this._g, this._b);
-                return {
-                    h: hsv.h * 360,
-                    s: hsv.s,
-                    v: hsv.v,
-                    a: this._a
-                };
-            },
-            toHsvString: function () {
-                var hsv = rgbToHsv(this._r, this._g, this._b);
-                var h = mathRound(hsv.h * 360), s = mathRound(hsv.s * 100), v = mathRound(hsv.v * 100);
-                return this._a == 1 ? 'hsv(' + h + ', ' + s + '%, ' + v + '%)' : 'hsva(' + h + ', ' + s + '%, ' + v + '%, ' + this._roundA + ')';
-            },
-            toHsl: function () {
-                var hsl = rgbToHsl(this._r, this._g, this._b);
-                return {
-                    h: hsl.h * 360,
-                    s: hsl.s,
-                    l: hsl.l,
-                    a: this._a
-                };
-            },
-            toHslString: function () {
-                var hsl = rgbToHsl(this._r, this._g, this._b);
-                var h = mathRound(hsl.h * 360), s = mathRound(hsl.s * 100), l = mathRound(hsl.l * 100);
-                return this._a == 1 ? 'hsl(' + h + ', ' + s + '%, ' + l + '%)' : 'hsla(' + h + ', ' + s + '%, ' + l + '%, ' + this._roundA + ')';
-            },
-            toHex: function (allow3Char) {
-                return rgbToHex(this._r, this._g, this._b, allow3Char);
-            },
-            toHexString: function (allow3Char) {
-                return '#' + this.toHex(allow3Char);
-            },
-            toHex8: function () {
-                return rgbaToHex(this._r, this._g, this._b, this._a);
-            },
-            toHex8String: function () {
-                return '#' + this.toHex8();
-            },
-            toRgb: function () {
-                return {
-                    r: mathRound(this._r),
-                    g: mathRound(this._g),
-                    b: mathRound(this._b),
-                    a: this._a
-                };
-            },
-            toRgbString: function () {
-                return this._a == 1 ? 'rgb(' + mathRound(this._r) + ', ' + mathRound(this._g) + ', ' + mathRound(this._b) + ')' : 'rgba(' + mathRound(this._r) + ', ' + mathRound(this._g) + ', ' + mathRound(this._b) + ', ' + this._roundA + ')';
-            },
-            toPercentageRgb: function () {
-                return {
-                    r: mathRound(bound01(this._r, 255) * 100) + '%',
-                    g: mathRound(bound01(this._g, 255) * 100) + '%',
-                    b: mathRound(bound01(this._b, 255) * 100) + '%',
-                    a: this._a
-                };
-            },
-            toPercentageRgbString: function () {
-                return this._a == 1 ? 'rgb(' + mathRound(bound01(this._r, 255) * 100) + '%, ' + mathRound(bound01(this._g, 255) * 100) + '%, ' + mathRound(bound01(this._b, 255) * 100) + '%)' : 'rgba(' + mathRound(bound01(this._r, 255) * 100) + '%, ' + mathRound(bound01(this._g, 255) * 100) + '%, ' + mathRound(bound01(this._b, 255) * 100) + '%, ' + this._roundA + ')';
-            },
-            toName: function () {
-                if (this._a === 0) {
-                    return 'transparent';
-                }
-                if (this._a < 1) {
-                    return false;
-                }
-                return hexNames[rgbToHex(this._r, this._g, this._b, true)] || false;
-            },
-            toFilter: function (secondColor) {
-                var hex8String = '#' + rgbaToHex(this._r, this._g, this._b, this._a);
-                var secondHex8String = hex8String;
-                var gradientType = this._gradientType ? 'GradientType = 1, ' : '';
-                if (secondColor) {
-                    var s = tinycolor(secondColor);
-                    secondHex8String = s.toHex8String();
-                }
-                return 'progid:DXImageTransform.Microsoft.gradient(' + gradientType + 'startColorstr=' + hex8String + ',endColorstr=' + secondHex8String + ')';
-            },
-            toString: function (format) {
-                var formatSet = !!format;
-                format = format || this._format;
-                var formattedString = false;
-                var hasAlpha = this._a < 1 && this._a >= 0;
-                var needsAlphaFormat = !formatSet && hasAlpha && (format === 'hex' || format === 'hex6' || format === 'hex3' || format === 'name');
-                if (needsAlphaFormat) {
-                    if (format === 'name' && this._a === 0) {
-                        return this.toName();
-                    }
-                    return this.toRgbString();
-                }
-                if (format === 'rgb') {
-                    formattedString = this.toRgbString();
-                }
-                if (format === 'prgb') {
-                    formattedString = this.toPercentageRgbString();
-                }
-                if (format === 'hex' || format === 'hex6') {
-                    formattedString = this.toHexString();
-                }
-                if (format === 'hex3') {
-                    formattedString = this.toHexString(true);
-                }
-                if (format === 'hex8') {
-                    formattedString = this.toHex8String();
-                }
-                if (format === 'name') {
-                    formattedString = this.toName();
-                }
-                if (format === 'hsl') {
-                    formattedString = this.toHslString();
-                }
-                if (format === 'hsv') {
-                    formattedString = this.toHsvString();
-                }
-                return formattedString || this.toHexString();
-            },
-            _applyModification: function (fn, args) {
-                var color = fn.apply(null, [this].concat([].slice.call(args)));
-                this._r = color._r;
-                this._g = color._g;
-                this._b = color._b;
-                this.setAlpha(color._a);
-                return this;
-            },
-            lighten: function () {
-                return this._applyModification(lighten, arguments);
-            },
-            brighten: function () {
-                return this._applyModification(brighten, arguments);
-            },
-            darken: function () {
-                return this._applyModification(darken, arguments);
-            },
-            desaturate: function () {
-                return this._applyModification(desaturate, arguments);
-            },
-            saturate: function () {
-                return this._applyModification(saturate, arguments);
-            },
-            greyscale: function () {
-                return this._applyModification(greyscale, arguments);
-            },
-            spin: function () {
-                return this._applyModification(spin, arguments);
-            },
-            _applyCombination: function (fn, args) {
-                return fn.apply(null, [this].concat([].slice.call(args)));
-            },
-            analogous: function () {
-                return this._applyCombination(analogous, arguments);
-            },
-            complement: function () {
-                return this._applyCombination(complement, arguments);
-            },
-            monochromatic: function () {
-                return this._applyCombination(monochromatic, arguments);
-            },
-            splitcomplement: function () {
-                return this._applyCombination(splitcomplement, arguments);
-            },
-            triad: function () {
-                return this._applyCombination(triad, arguments);
-            },
-            tetrad: function () {
-                return this._applyCombination(tetrad, arguments);
-            }
-        };
-        tinycolor.fromRatio = function (color, opts) {
-            if (typeof color == 'object') {
-                var newColor = {};
-                for (var i in color) {
-                    if (color.hasOwnProperty(i)) {
-                        if (i === 'a') {
-                            newColor[i] = color[i];
-                        } else {
-                            newColor[i] = convertToPercentage(color[i]);
-                        }
-                    }
-                }
-                color = newColor;
-            }
-            return tinycolor(color, opts);
-        };
-        function inputToRGB(color) {
-            var rgb = {
-                r: 0,
-                g: 0,
-                b: 0
-            };
-            var a = 1;
-            var ok = false;
-            var format = false;
-            if (typeof color == 'string') {
-                color = stringInputToObject(color);
-            }
-            if (typeof color == 'object') {
-                if (color.hasOwnProperty('r') && color.hasOwnProperty('g') && color.hasOwnProperty('b')) {
-                    rgb = rgbToRgb(color.r, color.g, color.b);
-                    ok = true;
-                    format = String(color.r).substr(-1) === '%' ? 'prgb' : 'rgb';
-                } else if (color.hasOwnProperty('h') && color.hasOwnProperty('s') && color.hasOwnProperty('v')) {
-                    color.s = convertToPercentage(color.s);
-                    color.v = convertToPercentage(color.v);
-                    rgb = hsvToRgb(color.h, color.s, color.v);
-                    ok = true;
-                    format = 'hsv';
-                } else if (color.hasOwnProperty('h') && color.hasOwnProperty('s') && color.hasOwnProperty('l')) {
-                    color.s = convertToPercentage(color.s);
-                    color.l = convertToPercentage(color.l);
-                    rgb = hslToRgb(color.h, color.s, color.l);
-                    ok = true;
-                    format = 'hsl';
-                }
-                if (color.hasOwnProperty('a')) {
-                    a = color.a;
-                }
-            }
-            a = boundAlpha(a);
-            return {
-                ok: ok,
-                format: color.format || format,
-                r: mathMin(255, mathMax(rgb.r, 0)),
-                g: mathMin(255, mathMax(rgb.g, 0)),
-                b: mathMin(255, mathMax(rgb.b, 0)),
-                a: a
-            };
-        }
-        function rgbToRgb(r, g, b) {
-            return {
-                r: bound01(r, 255) * 255,
-                g: bound01(g, 255) * 255,
-                b: bound01(b, 255) * 255
-            };
-        }
-        function rgbToHsl(r, g, b) {
-            r = bound01(r, 255);
-            g = bound01(g, 255);
-            b = bound01(b, 255);
-            var max = mathMax(r, g, b), min = mathMin(r, g, b);
-            var h, s, l = (max + min) / 2;
-            if (max == min) {
-                h = s = 0;
-            } else {
-                var d = max - min;
-                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-                switch (max) {
-                case r:
-                    h = (g - b) / d + (g < b ? 6 : 0);
-                    break;
-                case g:
-                    h = (b - r) / d + 2;
-                    break;
-                case b:
-                    h = (r - g) / d + 4;
-                    break;
-                }
-                h /= 6;
-            }
-            return {
-                h: h,
-                s: s,
-                l: l
-            };
-        }
-        function hslToRgb(h, s, l) {
-            var r, g, b;
-            h = bound01(h, 360);
-            s = bound01(s, 100);
-            l = bound01(l, 100);
-            function hue2rgb(p, q, t) {
-                if (t < 0)
-                    t += 1;
-                if (t > 1)
-                    t -= 1;
-                if (t < 1 / 6)
-                    return p + (q - p) * 6 * t;
-                if (t < 1 / 2)
-                    return q;
-                if (t < 2 / 3)
-                    return p + (q - p) * (2 / 3 - t) * 6;
-                return p;
-            }
-            if (s === 0) {
-                r = g = b = l;
-            } else {
-                var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-                var p = 2 * l - q;
-                r = hue2rgb(p, q, h + 1 / 3);
-                g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1 / 3);
-            }
-            return {
-                r: r * 255,
-                g: g * 255,
-                b: b * 255
-            };
-        }
-        function rgbToHsv(r, g, b) {
-            r = bound01(r, 255);
-            g = bound01(g, 255);
-            b = bound01(b, 255);
-            var max = mathMax(r, g, b), min = mathMin(r, g, b);
-            var h, s, v = max;
-            var d = max - min;
-            s = max === 0 ? 0 : d / max;
-            if (max == min) {
-                h = 0;
-            } else {
-                switch (max) {
-                case r:
-                    h = (g - b) / d + (g < b ? 6 : 0);
-                    break;
-                case g:
-                    h = (b - r) / d + 2;
-                    break;
-                case b:
-                    h = (r - g) / d + 4;
-                    break;
-                }
-                h /= 6;
-            }
-            return {
-                h: h,
-                s: s,
-                v: v
-            };
-        }
-        function hsvToRgb(h, s, v) {
-            h = bound01(h, 360) * 6;
-            s = bound01(s, 100);
-            v = bound01(v, 100);
-            var i = math.floor(h), f = h - i, p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s), mod = i % 6, r = [
-                    v,
-                    q,
-                    p,
-                    p,
-                    t,
-                    v
-                ][mod], g = [
-                    t,
-                    v,
-                    v,
-                    q,
-                    p,
-                    p
-                ][mod], b = [
-                    p,
-                    p,
-                    t,
-                    v,
-                    v,
-                    q
-                ][mod];
-            return {
-                r: r * 255,
-                g: g * 255,
-                b: b * 255
-            };
-        }
-        function rgbToHex(r, g, b, allow3Char) {
-            var hex = [
-                pad2(mathRound(r).toString(16)),
-                pad2(mathRound(g).toString(16)),
-                pad2(mathRound(b).toString(16))
-            ];
-            if (allow3Char && hex[0].charAt(0) == hex[0].charAt(1) && hex[1].charAt(0) == hex[1].charAt(1) && hex[2].charAt(0) == hex[2].charAt(1)) {
-                return hex[0].charAt(0) + hex[1].charAt(0) + hex[2].charAt(0);
-            }
-            return hex.join('');
-        }
-        function rgbaToHex(r, g, b, a) {
-            var hex = [
-                pad2(convertDecimalToHex(a)),
-                pad2(mathRound(r).toString(16)),
-                pad2(mathRound(g).toString(16)),
-                pad2(mathRound(b).toString(16))
-            ];
-            return hex.join('');
-        }
-        tinycolor.equals = function (color1, color2) {
-            if (!color1 || !color2) {
-                return false;
-            }
-            return tinycolor(color1).toRgbString() == tinycolor(color2).toRgbString();
-        };
-        tinycolor.random = function () {
-            return tinycolor.fromRatio({
-                r: mathRandom(),
-                g: mathRandom(),
-                b: mathRandom()
-            });
-        };
-        function desaturate(color, amount) {
-            amount = amount === 0 ? 0 : amount || 10;
-            var hsl = tinycolor(color).toHsl();
-            hsl.s -= amount / 100;
-            hsl.s = clamp01(hsl.s);
-            return tinycolor(hsl);
-        }
-        function saturate(color, amount) {
-            amount = amount === 0 ? 0 : amount || 10;
-            var hsl = tinycolor(color).toHsl();
-            hsl.s += amount / 100;
-            hsl.s = clamp01(hsl.s);
-            return tinycolor(hsl);
-        }
-        function greyscale(color) {
-            return tinycolor(color).desaturate(100);
-        }
-        function lighten(color, amount) {
-            amount = amount === 0 ? 0 : amount || 10;
-            var hsl = tinycolor(color).toHsl();
-            hsl.l += amount / 100;
-            hsl.l = clamp01(hsl.l);
-            return tinycolor(hsl);
-        }
-        function brighten(color, amount) {
-            amount = amount === 0 ? 0 : amount || 10;
-            var rgb = tinycolor(color).toRgb();
-            rgb.r = mathMax(0, mathMin(255, rgb.r - mathRound(255 * -(amount / 100))));
-            rgb.g = mathMax(0, mathMin(255, rgb.g - mathRound(255 * -(amount / 100))));
-            rgb.b = mathMax(0, mathMin(255, rgb.b - mathRound(255 * -(amount / 100))));
-            return tinycolor(rgb);
-        }
-        function darken(color, amount) {
-            amount = amount === 0 ? 0 : amount || 10;
-            var hsl = tinycolor(color).toHsl();
-            hsl.l -= amount / 100;
-            hsl.l = clamp01(hsl.l);
-            return tinycolor(hsl);
-        }
-        function spin(color, amount) {
-            var hsl = tinycolor(color).toHsl();
-            var hue = (mathRound(hsl.h) + amount) % 360;
-            hsl.h = hue < 0 ? 360 + hue : hue;
-            return tinycolor(hsl);
-        }
-        function complement(color) {
-            var hsl = tinycolor(color).toHsl();
-            hsl.h = (hsl.h + 180) % 360;
-            return tinycolor(hsl);
-        }
-        function triad(color) {
-            var hsl = tinycolor(color).toHsl();
-            var h = hsl.h;
-            return [
-                tinycolor(color),
-                tinycolor({
-                    h: (h + 120) % 360,
-                    s: hsl.s,
-                    l: hsl.l
-                }),
-                tinycolor({
-                    h: (h + 240) % 360,
-                    s: hsl.s,
-                    l: hsl.l
-                })
-            ];
-        }
-        function tetrad(color) {
-            var hsl = tinycolor(color).toHsl();
-            var h = hsl.h;
-            return [
-                tinycolor(color),
-                tinycolor({
-                    h: (h + 90) % 360,
-                    s: hsl.s,
-                    l: hsl.l
-                }),
-                tinycolor({
-                    h: (h + 180) % 360,
-                    s: hsl.s,
-                    l: hsl.l
-                }),
-                tinycolor({
-                    h: (h + 270) % 360,
-                    s: hsl.s,
-                    l: hsl.l
-                })
-            ];
-        }
-        function splitcomplement(color) {
-            var hsl = tinycolor(color).toHsl();
-            var h = hsl.h;
-            return [
-                tinycolor(color),
-                tinycolor({
-                    h: (h + 72) % 360,
-                    s: hsl.s,
-                    l: hsl.l
-                }),
-                tinycolor({
-                    h: (h + 216) % 360,
-                    s: hsl.s,
-                    l: hsl.l
-                })
-            ];
-        }
-        function analogous(color, results, slices) {
-            results = results || 6;
-            slices = slices || 30;
-            var hsl = tinycolor(color).toHsl();
-            var part = 360 / slices;
-            var ret = [tinycolor(color)];
-            for (hsl.h = (hsl.h - (part * results >> 1) + 720) % 360; --results;) {
-                hsl.h = (hsl.h + part) % 360;
-                ret.push(tinycolor(hsl));
-            }
-            return ret;
-        }
-        function monochromatic(color, results) {
-            results = results || 6;
-            var hsv = tinycolor(color).toHsv();
-            var h = hsv.h, s = hsv.s, v = hsv.v;
-            var ret = [];
-            var modification = 1 / results;
-            while (results--) {
-                ret.push(tinycolor({
-                    h: h,
-                    s: s,
-                    v: v
-                }));
-                v = (v + modification) % 1;
-            }
-            return ret;
-        }
-        tinycolor.mix = function (color1, color2, amount) {
-            amount = amount === 0 ? 0 : amount || 50;
-            var rgb1 = tinycolor(color1).toRgb();
-            var rgb2 = tinycolor(color2).toRgb();
-            var p = amount / 100;
-            var w = p * 2 - 1;
-            var a = rgb2.a - rgb1.a;
-            var w1;
-            if (w * a == -1) {
-                w1 = w;
-            } else {
-                w1 = (w + a) / (1 + w * a);
-            }
-            w1 = (w1 + 1) / 2;
-            var w2 = 1 - w1;
-            var rgba = {
-                r: rgb2.r * w1 + rgb1.r * w2,
-                g: rgb2.g * w1 + rgb1.g * w2,
-                b: rgb2.b * w1 + rgb1.b * w2,
-                a: rgb2.a * p + rgb1.a * (1 - p)
-            };
-            return tinycolor(rgba);
-        };
-        tinycolor.readability = function (color1, color2) {
-            var c1 = tinycolor(color1);
-            var c2 = tinycolor(color2);
-            var rgb1 = c1.toRgb();
-            var rgb2 = c2.toRgb();
-            var brightnessA = c1.getBrightness();
-            var brightnessB = c2.getBrightness();
-            var colorDiff = Math.max(rgb1.r, rgb2.r) - Math.min(rgb1.r, rgb2.r) + Math.max(rgb1.g, rgb2.g) - Math.min(rgb1.g, rgb2.g) + Math.max(rgb1.b, rgb2.b) - Math.min(rgb1.b, rgb2.b);
-            return {
-                brightness: Math.abs(brightnessA - brightnessB),
-                color: colorDiff
-            };
-        };
-        tinycolor.isReadable = function (color1, color2) {
-            var readability = tinycolor.readability(color1, color2);
-            return readability.brightness > 125 && readability.color > 500;
-        };
-        tinycolor.mostReadable = function (baseColor, colorList) {
-            var bestColor = null;
-            var bestScore = 0;
-            var bestIsReadable = false;
-            for (var i = 0; i < colorList.length; i++) {
-                var readability = tinycolor.readability(baseColor, colorList[i]);
-                var readable = readability.brightness > 125 && readability.color > 500;
-                var score = 3 * (readability.brightness / 125) + readability.color / 500;
-                if (readable && !bestIsReadable || readable && bestIsReadable && score > bestScore || !readable && !bestIsReadable && score > bestScore) {
-                    bestIsReadable = readable;
-                    bestScore = score;
-                    bestColor = tinycolor(colorList[i]);
-                }
-            }
-            return bestColor;
-        };
-        var names = tinycolor.names = {
-            aliceblue: 'f0f8ff',
-            antiquewhite: 'faebd7',
-            aqua: '0ff',
-            aquamarine: '7fffd4',
-            azure: 'f0ffff',
-            beige: 'f5f5dc',
-            bisque: 'ffe4c4',
-            black: '000',
-            blanchedalmond: 'ffebcd',
-            blue: '00f',
-            blueviolet: '8a2be2',
-            brown: 'a52a2a',
-            burlywood: 'deb887',
-            burntsienna: 'ea7e5d',
-            cadetblue: '5f9ea0',
-            chartreuse: '7fff00',
-            chocolate: 'd2691e',
-            coral: 'ff7f50',
-            cornflowerblue: '6495ed',
-            cornsilk: 'fff8dc',
-            crimson: 'dc143c',
-            cyan: '0ff',
-            darkblue: '00008b',
-            darkcyan: '008b8b',
-            darkgoldenrod: 'b8860b',
-            darkgray: 'a9a9a9',
-            darkgreen: '006400',
-            darkgrey: 'a9a9a9',
-            darkkhaki: 'bdb76b',
-            darkmagenta: '8b008b',
-            darkolivegreen: '556b2f',
-            darkorange: 'ff8c00',
-            darkorchid: '9932cc',
-            darkred: '8b0000',
-            darksalmon: 'e9967a',
-            darkseagreen: '8fbc8f',
-            darkslateblue: '483d8b',
-            darkslategray: '2f4f4f',
-            darkslategrey: '2f4f4f',
-            darkturquoise: '00ced1',
-            darkviolet: '9400d3',
-            deeppink: 'ff1493',
-            deepskyblue: '00bfff',
-            dimgray: '696969',
-            dimgrey: '696969',
-            dodgerblue: '1e90ff',
-            firebrick: 'b22222',
-            floralwhite: 'fffaf0',
-            forestgreen: '228b22',
-            fuchsia: 'f0f',
-            gainsboro: 'dcdcdc',
-            ghostwhite: 'f8f8ff',
-            gold: 'ffd700',
-            goldenrod: 'daa520',
-            gray: '808080',
-            green: '008000',
-            greenyellow: 'adff2f',
-            grey: '808080',
-            honeydew: 'f0fff0',
-            hotpink: 'ff69b4',
-            indianred: 'cd5c5c',
-            indigo: '4b0082',
-            ivory: 'fffff0',
-            khaki: 'f0e68c',
-            lavender: 'e6e6fa',
-            lavenderblush: 'fff0f5',
-            lawngreen: '7cfc00',
-            lemonchiffon: 'fffacd',
-            lightblue: 'add8e6',
-            lightcoral: 'f08080',
-            lightcyan: 'e0ffff',
-            lightgoldenrodyellow: 'fafad2',
-            lightgray: 'd3d3d3',
-            lightgreen: '90ee90',
-            lightgrey: 'd3d3d3',
-            lightpink: 'ffb6c1',
-            lightsalmon: 'ffa07a',
-            lightseagreen: '20b2aa',
-            lightskyblue: '87cefa',
-            lightslategray: '789',
-            lightslategrey: '789',
-            lightsteelblue: 'b0c4de',
-            lightyellow: 'ffffe0',
-            lime: '0f0',
-            limegreen: '32cd32',
-            linen: 'faf0e6',
-            magenta: 'f0f',
-            maroon: '800000',
-            mediumaquamarine: '66cdaa',
-            mediumblue: '0000cd',
-            mediumorchid: 'ba55d3',
-            mediumpurple: '9370db',
-            mediumseagreen: '3cb371',
-            mediumslateblue: '7b68ee',
-            mediumspringgreen: '00fa9a',
-            mediumturquoise: '48d1cc',
-            mediumvioletred: 'c71585',
-            midnightblue: '191970',
-            mintcream: 'f5fffa',
-            mistyrose: 'ffe4e1',
-            moccasin: 'ffe4b5',
-            navajowhite: 'ffdead',
-            navy: '000080',
-            oldlace: 'fdf5e6',
-            olive: '808000',
-            olivedrab: '6b8e23',
-            orange: 'ffa500',
-            orangered: 'ff4500',
-            orchid: 'da70d6',
-            palegoldenrod: 'eee8aa',
-            palegreen: '98fb98',
-            paleturquoise: 'afeeee',
-            palevioletred: 'db7093',
-            papayawhip: 'ffefd5',
-            peachpuff: 'ffdab9',
-            peru: 'cd853f',
-            pink: 'ffc0cb',
-            plum: 'dda0dd',
-            powderblue: 'b0e0e6',
-            purple: '800080',
-            rebeccapurple: '663399',
-            red: 'f00',
-            rosybrown: 'bc8f8f',
-            royalblue: '4169e1',
-            saddlebrown: '8b4513',
-            salmon: 'fa8072',
-            sandybrown: 'f4a460',
-            seagreen: '2e8b57',
-            seashell: 'fff5ee',
-            sienna: 'a0522d',
-            silver: 'c0c0c0',
-            skyblue: '87ceeb',
-            slateblue: '6a5acd',
-            slategray: '708090',
-            slategrey: '708090',
-            snow: 'fffafa',
-            springgreen: '00ff7f',
-            steelblue: '4682b4',
-            tan: 'd2b48c',
-            teal: '008080',
-            thistle: 'd8bfd8',
-            tomato: 'ff6347',
-            turquoise: '40e0d0',
-            violet: 'ee82ee',
-            wheat: 'f5deb3',
-            white: 'fff',
-            whitesmoke: 'f5f5f5',
-            yellow: 'ff0',
-            yellowgreen: '9acd32'
-        };
-        var hexNames = tinycolor.hexNames = flip(names);
-        function flip(o) {
-            var flipped = {};
-            for (var i in o) {
-                if (o.hasOwnProperty(i)) {
-                    flipped[o[i]] = i;
-                }
-            }
-            return flipped;
-        }
-        function boundAlpha(a) {
-            a = parseFloat(a);
-            if (isNaN(a) || a < 0 || a > 1) {
-                a = 1;
-            }
-            return a;
-        }
-        function bound01(n, max) {
-            if (isOnePointZero(n)) {
-                n = '100%';
-            }
-            var processPercent = isPercentage(n);
-            n = mathMin(max, mathMax(0, parseFloat(n)));
-            if (processPercent) {
-                n = parseInt(n * max, 10) / 100;
-            }
-            if (math.abs(n - max) < 0.000001) {
-                return 1;
-            }
-            return n % max / parseFloat(max);
-        }
-        function clamp01(val) {
-            return mathMin(1, mathMax(0, val));
-        }
-        function parseIntFromHex(val) {
-            return parseInt(val, 16);
-        }
-        function isOnePointZero(n) {
-            return typeof n == 'string' && n.indexOf('.') != -1 && parseFloat(n) === 1;
-        }
-        function isPercentage(n) {
-            return typeof n === 'string' && n.indexOf('%') != -1;
-        }
-        function pad2(c) {
-            return c.length == 1 ? '0' + c : '' + c;
-        }
-        function convertToPercentage(n) {
-            if (n <= 1) {
-                n = n * 100 + '%';
-            }
-            return n;
-        }
-        function convertDecimalToHex(d) {
-            return Math.round(parseFloat(d) * 255).toString(16);
-        }
-        function convertHexToDecimal(h) {
-            return parseIntFromHex(h) / 255;
-        }
-        var matchers = function () {
-            var CSS_INTEGER = '[-\\+]?\\d+%?';
-            var CSS_NUMBER = '[-\\+]?\\d*\\.\\d+%?';
-            var CSS_UNIT = '(?:' + CSS_NUMBER + ')|(?:' + CSS_INTEGER + ')';
-            var PERMISSIVE_MATCH3 = '[\\s|\\(]+(' + CSS_UNIT + ')[,|\\s]+(' + CSS_UNIT + ')[,|\\s]+(' + CSS_UNIT + ')\\s*\\)?';
-            var PERMISSIVE_MATCH4 = '[\\s|\\(]+(' + CSS_UNIT + ')[,|\\s]+(' + CSS_UNIT + ')[,|\\s]+(' + CSS_UNIT + ')[,|\\s]+(' + CSS_UNIT + ')\\s*\\)?';
-            return {
-                rgb: new RegExp('rgb' + PERMISSIVE_MATCH3),
-                rgba: new RegExp('rgba' + PERMISSIVE_MATCH4),
-                hsl: new RegExp('hsl' + PERMISSIVE_MATCH3),
-                hsla: new RegExp('hsla' + PERMISSIVE_MATCH4),
-                hsv: new RegExp('hsv' + PERMISSIVE_MATCH3),
-                hsva: new RegExp('hsva' + PERMISSIVE_MATCH4),
-                hex3: /^([0-9a-fA-F]{1})([0-9a-fA-F]{1})([0-9a-fA-F]{1})$/,
-                hex6: /^([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/,
-                hex8: /^([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/
-            };
-        }();
-        function stringInputToObject(color) {
-            color = color.replace(trimLeft, '').replace(trimRight, '').toLowerCase();
-            var named = false;
-            if (names[color]) {
-                color = names[color];
-                named = true;
-            } else if (color == 'transparent') {
-                return {
-                    r: 0,
-                    g: 0,
-                    b: 0,
-                    a: 0,
-                    format: 'name'
-                };
-            }
-            var match;
-            if (match = matchers.rgb.exec(color)) {
-                return {
-                    r: match[1],
-                    g: match[2],
-                    b: match[3]
-                };
-            }
-            if (match = matchers.rgba.exec(color)) {
-                return {
-                    r: match[1],
-                    g: match[2],
-                    b: match[3],
-                    a: match[4]
-                };
-            }
-            if (match = matchers.hsl.exec(color)) {
-                return {
-                    h: match[1],
-                    s: match[2],
-                    l: match[3]
-                };
-            }
-            if (match = matchers.hsla.exec(color)) {
-                return {
-                    h: match[1],
-                    s: match[2],
-                    l: match[3],
-                    a: match[4]
-                };
-            }
-            if (match = matchers.hsv.exec(color)) {
-                return {
-                    h: match[1],
-                    s: match[2],
-                    v: match[3]
-                };
-            }
-            if (match = matchers.hsva.exec(color)) {
-                return {
-                    h: match[1],
-                    s: match[2],
-                    v: match[3],
-                    a: match[4]
-                };
-            }
-            if (match = matchers.hex8.exec(color)) {
-                return {
-                    a: convertHexToDecimal(match[1]),
-                    r: parseIntFromHex(match[2]),
-                    g: parseIntFromHex(match[3]),
-                    b: parseIntFromHex(match[4]),
-                    format: named ? 'name' : 'hex8'
-                };
-            }
-            if (match = matchers.hex6.exec(color)) {
-                return {
-                    r: parseIntFromHex(match[1]),
-                    g: parseIntFromHex(match[2]),
-                    b: parseIntFromHex(match[3]),
-                    format: named ? 'name' : 'hex'
-                };
-            }
-            if (match = matchers.hex3.exec(color)) {
-                return {
-                    r: parseIntFromHex(match[1] + '' + match[1]),
-                    g: parseIntFromHex(match[2] + '' + match[2]),
-                    b: parseIntFromHex(match[3] + '' + match[3]),
-                    format: named ? 'name' : 'hex'
-                };
-            }
-            return false;
-        }
-        window.tinycolor = tinycolor;
-        $(function () {
-            if ($.fn.spectrum.load) {
-                $.fn.spectrum.processNativeColorInputs();
-            }
-        });
-    };
-});
-define('domain_abstract/ui/InputColor',[
-    'skylark-backbone',
-    'skylark-underscore',
-    '../../utils/ColorPicker',
-    './Input'
-], function (Backbone, a, ColorPicker, Input) {
-    'use strict';
-    const $ = Backbone.$;
-    ColorPicker($);
-    return Input.extend({
-        template() {
-            const ppfx = this.ppfx;
-            return `
-      <div class="${ this.holderClass() }"></div>
-      <div class="${ ppfx }field-colorp">
-        <div class="${ ppfx }field-colorp-c" data-colorp-c>
-          <div class="${ ppfx }checker-bg"></div>
-        </div>
-      </div>
-    `;
-        },
-        inputClass() {
-            const ppfx = this.ppfx;
-            return `${ ppfx }field ${ ppfx }field-color`;
-        },
-        holderClass() {
-            return `${ this.ppfx }input-holder`;
-        },
-        setValue(val, opts = {}) {
-            const model = this.model;
-            const def = model.get('defaults');
-            const value = !a.isUndefined(val) ? val : !a.isUndefined(def) ? def : '';
-            const inputEl = this.getInputEl();
-            const colorEl = this.getColorEl();
-            const valueClr = value != 'none' ? value : '';
-            inputEl.value = value;
-            colorEl.get(0).style.backgroundColor = valueClr;
-            if (opts.fromTarget) {
-                colorEl.spectrum('set', valueClr);
-                this.noneColor = value == 'none';
-            }
-        },
-        getColorEl() {
-            if (!this.colorEl) {
-                const self = this;
-                const ppfx = this.ppfx;
-                var model = this.model;
-                var colorEl = $(`<div class="${ this.ppfx }field-color-picker"></div>`);
-                var cpStyle = colorEl.get(0).style;
-                var elToAppend = this.em && this.em.config ? this.em.config.el : '';
-                var colorPickerConfig = this.em && this.em.getConfig && this.em.getConfig('colorPicker') || {};
-                const getColor = color => {
-                    let cl = color.getAlpha() == 1 ? color.toHexString() : color.toRgbString();
-                    return cl.replace(/ /g, '');
-                };
-                let changed = 0;
-                let previousColor;
-                this.$el.find(`[data-colorp-c]`).append(colorEl);
-                colorEl.spectrum({
-                    containerClassName: `${ ppfx }one-bg ${ ppfx }two-color`,
-                    appendTo: elToAppend || 'body',
-                    maxSelectionSize: 8,
-                    showPalette: true,
-                    showAlpha: true,
-                    chooseText: 'Ok',
-                    cancelText: '\u2A2F',
-                    palette: [],
-                    ...colorPickerConfig,
-                    move(color) {
-                        const cl = getColor(color);
-                        cpStyle.backgroundColor = cl;
-                        model.setValueFromInput(cl, 0);
-                    },
-                    change(color) {
-                        changed = 1;
-                        const cl = getColor(color);
-                        cpStyle.backgroundColor = cl;
-                        model.setValueFromInput(0, 0);
-                        model.setValueFromInput(cl);
-                        self.noneColor = 0;
-                    },
-                    show(color) {
-                        changed = 0;
-                        previousColor = getColor(color);
-                    },
-                    hide(color) {
-                        if (!changed && previousColor) {
-                            if (self.noneColor) {
-                                previousColor = '';
-                            }
-                            cpStyle.backgroundColor = previousColor;
-                            colorEl.spectrum('set', previousColor);
-                            model.setValueFromInput(previousColor, 0);
-                        }
-                    }
-                });
-                this.colorEl = colorEl;
-            }
-            return this.colorEl;
-        },
-        render() {
-            Input.prototype.render.call(this);
-            this.getColorEl();
-            return this;
-        }
-    });
-});
 define('skylark-grapejs/trait_manager/view/TraitColorView',[
     './TraitView',
-    'domain_abstract/ui/InputColor'
+    '../../domain_abstract/ui/InputColor'
 ], function (TraitView, InputColor) {
     'use strict';
     return TraitView.extend({
@@ -46511,7 +44148,7 @@ define('skylark-grapejs/trait_manager/view/TraitButtonView',[
     });
 });
 define('skylark-grapejs/trait_manager/view/TraitsView',[
-    'domain_abstract/view/DomainViews',
+    '../../domain_abstract/view/DomainViews',
     './TraitView',
     './TraitSelectView',
     './TraitCheckboxView',
@@ -46655,14 +44292,14 @@ define('skylark-grapejs/dom_components/model/Components',[
 ], function (langx,Backbone, _) {
     'use strict';
     let Component;
-    return Backbone.Collection.extend({
+    var Components =  Backbone.Collection.extend({
         initialize(models, opt = {}) {
             this.opt = opt;
             this.listenTo(this, 'add', this.onAdd);
             this.config = opt.config;
             this.em = opt.em;
             const {em} = this;
-            this.model = (attrs, options) => {
+            this.model = function(attrs, options) { // modified by lwf
                 var model;
                 const df = opt.em.get('DomComponents').componentTypes;
                 options.em = opt.em;
@@ -46692,7 +44329,7 @@ define('skylark-grapejs/dom_components/model/Components',[
             const cssc = em.get('CssComposer');
             const parsed = em.get('Parser').parseHtml(value);
             if (!Component)
-                Component = require('./Component').default;
+                Component =  Components.Component; //require('./Component').default; // modified by lwf
             Component.checkId(parsed.html, parsed.css, domc.componentsById);
             if (parsed.css && cssc && !opt.temporary) {
                 cssc.addCollection(parsed.css, langx.mixin({},opt,{
@@ -46777,6 +44414,8 @@ define('skylark-grapejs/dom_components/model/Components',[
             }
         }
     });
+
+    return Components;
 });
 define('skylark-grapejs/trait_manager/model/Trait',[
     'skylark-backbone',
@@ -46960,6 +44599,7 @@ define('skylark-grapejs/dom_components/model/Component',[
     '../../trait_manager/model/Traits'
 ], function (langx,_, b, Styleable, Backbone, Components, Selector, Selectors, Traits) {
     'use strict';
+
     const componentList = {};
     let componentIndex = 0;
     const escapeRegExp = str => {
@@ -47018,7 +44658,7 @@ define('skylark-grapejs/dom_components/model/Component',[
             if (parentAttr && parentAttr.propagate) {
                 let newAttr = {};
                 const toPropagate = parentAttr.propagate;
-                toPropagate.undefined(prop => newAttr[prop] = parent.get(prop));
+                toPropagate.forEach(prop => newAttr[prop] = parent.get(prop));
                 newAttr.propagate = toPropagate;
                 newAttr = langx.mixin({},newAttr,props);
                 this.set(newAttr);
@@ -47049,7 +44689,7 @@ define('skylark-grapejs/dom_components/model/Component',[
                 'classes',
                 'traits',
                 'components'
-            ].undefined(name => {
+            ].forEach(name => {
                 const events = `add remove ${ name !== 'components' ? 'change' : '' }`;
                 this.listenTo(this.get(name), events.trim(), (...args) => this.emitUpdate(name, ...args));
             });
@@ -47083,7 +44723,7 @@ define('skylark-grapejs/dom_components/model/Component',[
         },
         findType(id) {
             const result = [];
-            const find = components => components.undefined(item => {
+            const find = components => components.forEach(item => {
                 item.is(id) && result.push(item);
                 find(item.components());
             });
@@ -47116,7 +44756,7 @@ define('skylark-grapejs/dom_components/model/Component',[
             delete attrs.style;
             const attrPrev = { ...this.previous('attributes') };
             const diff = b.shallowDiff(attrPrev, this.get('attributes'));
-            _.keys(diff).undefined(pr => this.trigger(`change:attributes:${ pr }`, this, diff[pr], opts));
+            _.keys(diff).forEach(pr => this.trigger(`change:attributes:${ pr }`, this, diff[pr], opts));
         },
         setAttributes(attrs, opts = {}) {
             this.set('attributes', { ...attrs }, opts);
@@ -47162,7 +44802,7 @@ define('skylark-grapejs/dom_components/model/Component',[
                 });
                 const diff = b.shallowDiff(propOrig, prop);
                 this.set('style', {}, { silent: 1 });
-                _.keys(diff).undefined(pr => this.trigger(`change:style:${ pr }`));
+                _.keys(diff).forEach(pr => this.trigger(`change:style:${ pr }`));
             } else {
                 prop = Styleable.setStyle.apply(this, arguments);
             }
@@ -47174,7 +44814,7 @@ define('skylark-grapejs/dom_components/model/Component',[
             const attributes = { ...this.get('attributes') };
             const sm = em && em.get('SelectorManager');
             const id = this.getId();
-            this.get('classes').undefined(cls => classes.push(_.isString(cls) ? cls : cls.get('name')));
+            this.get('classes').forEach(cls => classes.push(_.isString(cls) ? cls : cls.get('name')));
             classes.length && (attributes.class = classes.join(' '));
             if (!_.has(attributes, 'id')) {
                 let hasStyle;
@@ -47202,9 +44842,9 @@ define('skylark-grapejs/dom_components/model/Component',[
             classes = _.isArray(classes) ? classes : [classes];
             const selectors = this.get('classes');
             const type = Selector.TYPE_CLASS;
-            classes.undefined(classe => {
+            classes.forEach(classe => {
                 const classes = classe.split(' ');
-                classes.undefined(name => {
+                classes.forEach(name => {
                     const selector = selectors.where({
                         name,
                         type
@@ -47341,7 +44981,7 @@ define('skylark-grapejs/dom_components/model/Component',[
                 const trt = new Traits([], this.opt);
                 trt.setTarget(this);
                 if (traits.length) {
-                    traits.undefined(tr => tr.attributes && delete tr.attributes.value);
+                    traits.forEach(tr => tr.attributes && delete tr.attributes.value);
                     trt.add(traits);
                 }
                 this.set('traits', trt, opts);
@@ -47386,7 +45026,7 @@ define('skylark-grapejs/dom_components/model/Component',[
             var clm = em.get('SelectorManager');
             if (!clm)
                 return;
-            arr.undefined(val => {
+            arr.forEach(val => {
                 var name = '';
                 if (typeof val === 'string')
                     name = val;
@@ -47578,7 +45218,7 @@ define('skylark-grapejs/dom_components/model/Component',[
         onAll(clb) {
             if (_.isFunction(clb)) {
                 clb(this);
-                this.components().undefined(model => model.onAll(clb));
+                this.components().forEach(model => model.onAll(clb));
             }
             return this;
         },
@@ -47644,7 +45284,7 @@ define('skylark-grapejs/dom_components/model/Component',[
             return nextId;
         },
         getNewId(list) {
-            const count = Object.undefined(list).length;
+            const count = Object.keys(list).length;
             const ilen = count.toString().length + 2;
             const uid = (Math.random() + 1.1).toString(36).slice(-ilen);
             let newId = `i${ uid }`;
@@ -47668,15 +45308,15 @@ define('skylark-grapejs/dom_components/model/Component',[
         },
         checkId(components, styles = [], list = {}) {
             const comps = _.isArray(components) ? components : [components];
-            comps.undefined(comp => {
+            comps.forEach(comp => {
                 const {attributes = {}, components} = comp;
                 const {id} = attributes;
                 if (id && list[id]) {
                     const newId = Component.getIncrementId(id, list);
                     attributes.id = newId;
-                    _.isArray(styles) && styles.undefined(style => {
+                    _.isArray(styles) && styles.forEach(style => {
                         const {selectors} = style;
-                        selectors.undefined((sel, idx) => {
+                        selectors.forEach((sel, idx) => {
                             if (sel === `#${ id }`)
                                 selectors[idx] = `#${ newId }`;
                         });
@@ -47688,6 +45328,9 @@ define('skylark-grapejs/dom_components/model/Component',[
     });
     
     Component.eventDrag = eventDrag;
+
+    Components.Component = Component;
+    
     
     return Component;
 });
@@ -47696,7 +45339,8 @@ define('skylark-grapejs/dom_components/view/ComponentsView',[
     'skylark-underscore'
 ], function (Backbone, a) {
     'use strict';
-    return Backbone.View.extend({
+
+    var ComponentsView =  Backbone.View.extend({
         initialize(o) {
             this.opts = o || {};
             this.config = o.config || {};
@@ -47748,7 +45392,7 @@ define('skylark-grapejs/dom_components/view/ComponentsView',[
         },
         addToCollection(model, fragmentEl, index) {
             if (!this.compView)
-                this.compView = require('./ComponentView').default;
+                this.compView = ComponentsView.ComponentView ;//require('./ComponentView').default; // modified by lwf
             const {config, opts, em} = this;
             const fragment = fragmentEl || null;
             const dt = opts.componentTypes || em && em.get('DomComponents').getTypes();
@@ -47801,6 +45445,8 @@ define('skylark-grapejs/dom_components/view/ComponentsView',[
             return this;
         }
     });
+
+    return ComponentsView;
 });
 define('skylark-grapejs/dom_components/view/ComponentView',[
     'skylark-backbone',
@@ -47812,7 +45458,7 @@ define('skylark-grapejs/dom_components/view/ComponentView',[
     '../../utils/mixins'
 ], function (Backbone, a, Components, ComponentsView, Selectors, b, c) {
     'use strict';
-    return Backbone.View.extend({
+    var ComponentView = Backbone.View.extend({
         className() {
             return this.getClasses();
         },
@@ -47935,7 +45581,7 @@ define('skylark-grapejs/dom_components/view/ComponentView',[
         importClasses() {
             var clm = this.config.em.get('SelectorManager');
             if (clm) {
-                this.model.get('classes').undefined(m => {
+                this.model.get('classes').each(m => {
                     clm.add(m.get('name'));
                 });
             }
@@ -48158,6 +45804,10 @@ define('skylark-grapejs/dom_components/view/ComponentView',[
         onRender() {
         }
     });
+
+    ComponentsView.ComponentView = ComponentView;
+
+    return ComponentView;
 });
 define('skylark-grapejs/dom_components/model/ComponentTableCell',['./Component'], function (Component) {
     'use strict';
@@ -48352,7 +46002,7 @@ define('skylark-grapejs/dom_components/view/ComponentTableFootView',['./Componen
     return ComponentView.extend({});
 });
 define('skylark-grapejs/dom_components/model/ComponentImage',[
-    "skylark-langx",
+    "skylark-langx/langx",
     'skylark-underscore',
     './Component'
 ], function (langx,_, Component) {
@@ -50005,18 +47655,128 @@ define('skylark-grapejs/navigator/config/config',[],function () {
         highlightHover: 1
     };
 });
+define('skylark-grapejs/navigator/view/ItemsView',[
+    'skylark-backbone',
+    '../../dom_components/model/Component'
+], function (Backbone, a) {
+    'use strict';
+    var ItemsView =  Backbone.View.extend({
+        initialize(o = {}) {
+            this.opt = o;
+            const config = o.config || {};
+            this.level = o.level;
+            this.config = config;
+            this.preview = o.preview;
+            this.ppfx = config.pStylePrefix || '';
+            this.pfx = config.stylePrefix || '';
+            this.parent = o.parent;
+            this.parentView = o.parentView;
+            const pfx = this.pfx;
+            const ppfx = this.ppfx;
+            const parent = this.parent;
+            const coll = this.collection;
+            this.listenTo(coll, 'add', this.addTo);
+            this.listenTo(coll, 'reset resetNavigator', this.render);
+            this.listenTo(coll, 'remove', this.removeChildren);
+            this.className = `${ pfx }layers`;
+            const em = config.em;
+            if (config.sortable && !this.opt.sorter) {
+                const utils = em.get('Utils');
+                this.opt.sorter = new utils.Sorter({
+                    container: config.sortContainer || this.el,
+                    containerSel: `.${ this.className }`,
+                    itemSel: `.${ pfx }layer`,
+                    ignoreViewChildren: 1,
+                    onEndMove(created, sorter, data) {
+                        const srcModel = sorter.getSourceModel();
+                        em.setSelected(srcModel, { forceChange: 1 });
+                        em.trigger(`${ a.eventDrag }:end`, data);
+                    },
+                    avoidSelectOnEnd: 1,
+                    nested: 1,
+                    ppfx,
+                    pfx
+                });
+            }
+            this.sorter = this.opt.sorter || '';
+            this.$el.data('collection', coll);
+            parent && this.$el.data('model', parent);
+        },
+        removeChildren(removed) {
+            const view = removed.viewLayer;
+            if (!view)
+                return;
+            view.remove.apply(view);
+        },
+        addTo(model) {
+            var i = this.collection.indexOf(model);
+            this.addToCollection(model, null, i);
+        },
+        addToCollection(model, fragmentEl, index) {
+            const {level, parentView} = this;
+            var fragment = fragmentEl || null;
+            var viewObject = ItemsView.ItemView;
+            var view = new viewObject({
+                level,
+                model,
+                parentView,
+                config: this.config,
+                sorter: this.sorter,
+                isCountable: this.isCountable,
+                opened: this.opt.opened
+            });
+            var rendered = view.render().el;
+            if (fragment) {
+                fragment.appendChild(rendered);
+            } else {
+                if (typeof index != 'undefined') {
+                    var method = 'before';
+                    if (this.$el.children().length == index) {
+                        index--;
+                        method = 'after';
+                    }
+                    if (index < 0) {
+                        this.$el.append(rendered);
+                    } else
+                        this.$el.children().eq(index)[method](rendered);
+                } else
+                    this.$el.append(rendered);
+            }
+            return rendered;
+        },
+        isCountable(model, hide) {
+            var type = model.get('type');
+            var tag = model.get('tagName');
+            if ((type == 'textnode' || tag == 'br') && hide || !model.get('layerable')) {
+                return false;
+            }
+            return true;
+        },
+        render() {
+            const frag = document.createDocumentFragment();
+            const el = this.el;
+            el.innerHTML = '';
+            this.collection.each(model => this.addToCollection(model, frag));
+            el.appendChild(frag);
+            el.className = this.className;
+            return this;
+        }
+    });
+
+    return ItemsView;
+});
 define('skylark-grapejs/navigator/view/ItemView',[
     'skylark-underscore',
     '../../utils/mixins',
     'skylark-backbone',
     '../../dom_components/view/ComponentView',
-    '../../dom_components/model/Component'
-], function (_, b, Backbone, ComponentView, Component) {
+    '../../dom_components/model/Component',
+    "./ItemsView"
+], function (_, b, Backbone, ComponentView, Component,ItemsView) {
     'use strict';
     const inputProp = 'contentEditable';
     const $ = Backbone.$;
-    let ItemsView;
-    return Backbone.View.extend({
+    var ItemView = Backbone.View.extend({
         events: {
             'mousedown [data-toggle-move]': 'startSort',
             'touchstart [data-toggle-move]': 'startSort',
@@ -50271,9 +48031,9 @@ define('skylark-grapejs/navigator/view/ItemView',[
             const vis = this.isVisible();
             const el = this.$el.empty();
             const level = this.level + 1;
-            if (_.isUndefined(ItemsView)) {
-                ItemsView = require('./ItemsView').default;
-            }
+            //if (_.isUndefined(ItemsView)) {
+            //    ItemsView = ItemView.ItemsView; // require('./ItemsView').default; modified by lwf
+            //}
             const children = new ItemsView({
                 collection: model.get('components'),
                 config: this.config,
@@ -50301,6 +48061,9 @@ define('skylark-grapejs/navigator/view/ItemView',[
             return this;
         }
     });
+
+    ItemsView.ItemView = ItemView;
+    return ItemView;
 });
 define('skylark-grapejs/navigator/index',[
     './config/config',
@@ -50728,96 +48491,6 @@ define('skylark-grapejs/canvas/model/Canvas',[
         }
     });
 });
-define('skylark-grapejs/domain_abstract/view/DomainViews',[
-    'skylark-underscore',
-    'skylark-backbone'
-], function (a, Backbone) {
-    'use strict';
-    return Backbone.View.extend({
-        itemView: '',
-        itemsView: '',
-        itemType: 'type',
-        autoAdd: 0,
-        initialize(opts = {}, config) {
-            this.config = config || opts.config || {};
-            this.autoAdd && this.listenTo(this.collection, 'add', this.addTo);
-            this.init();
-        },
-        init() {
-        },
-        addTo(model) {
-            this.add(model);
-        },
-        itemViewNotFound(type) {
-            const {config, ns} = this;
-            const {em} = config;
-            const warn = `${ ns ? `[${ ns }]: ` : '' }'${ type }' type not found`;
-            em && em.logWarning(warn);
-        },
-        add(model, fragment) {
-            const {config, reuseView, itemsView = {}} = this;
-            const inputTypes = [
-                'button',
-                'checkbox',
-                'color',
-                'date',
-                'datetime-local',
-                'email',
-                'file',
-                'hidden',
-                'image',
-                'month',
-                'number',
-                'password',
-                'radio',
-                'range',
-                'reset',
-                'search',
-                'submit',
-                'tel',
-                'text',
-                'time',
-                'url',
-                'week'
-            ];
-            var frag = fragment || null;
-            var itemView = this.itemView;
-            var typeField = model.get(this.itemType);
-            let view;
-            if (itemsView[typeField]) {
-                itemView = itemsView[typeField];
-            } else if (typeField && !itemsView[typeField] && !a.includes(inputTypes, typeField)) {
-                this.itemViewNotFound(typeField);
-            }
-            if (model.view && reuseView) {
-                view = model.view;
-            } else {
-                view = new itemView({
-                    model,
-                    config
-                }, config);
-            }
-            var rendered = view.render().el;
-            if (frag)
-                frag.appendChild(rendered);
-            else
-                this.$el.append(rendered);
-        },
-        render() {
-            var frag = document.createDocumentFragment();
-            this.$el.empty();
-            if (this.collection.length)
-                this.collection.each(function (model) {
-                    this.add(model, frag);
-                }, this);
-            this.$el.append(frag);
-            this.onRender();
-            return this;
-        },
-        onRender() {
-        }
-    });
-});
 define('skylark-grapejs/canvas/view/FrameView',[
     "skylark-langx/langx",
     'skylark-backbone',
@@ -50837,10 +48510,10 @@ define('skylark-grapejs/canvas/view/FrameView',[
         initialize(o) {
             _.bindAll(this, 'updateClientY', 'stopAutoscroll', 'autoscroll', '_emitUpdate');
             const {model, el} = this;
-            this.config = langx.mixin({},
-                ...o.config ,{
+            this.config = {
+                ...o.config ,
                 frameView: this
-            });
+            };
             this.ppfx = this.config.pStylePrefix || '';
             this.em = this.config.em;
             this.listenTo(model, 'change:head', this.updateHead);
@@ -51726,7 +49399,7 @@ define('skylark-grapejs/canvas/index',[
             },
             getOffset() {
                 var frameOff = this.offset(this.getFrameEl());
-                var canvasOff = this.offset(this.undefined());
+                var canvasOff = this.offset(this.getElement());
                 return {
                     top: frameOff.top - canvasOff.top,
                     left: frameOff.left - canvasOff.left
@@ -52014,1329 +49687,2141 @@ define('skylark-grapejs/commands/config/config',[],function () {
         strict: 1
     };
 });
-define('parser/model/ParserHtml',['skylark-underscore'], function (a) {
+define('skylark-grapejs/commands/view/CanvasClear',[],function () {
     'use strict';
-    return config => {
-        var TEXT_NODE = 'span';
-        var c = config;
-        var modelAttrStart = 'data-gjs-';
-        return {
-            compTypes: '',
-            modelAttrStart,
-            splitPropsFromAttr(attr = {}) {
-                const props = {};
-                const attrs = {};
-                a.each(attr, (value, key) => {
-                    if (key.indexOf(this.modelAttrStart) === 0) {
-                        const modelAttr = key.replace(modelAttrStart, '');
-                        const valueLen = value.length;
-                        const valStr = value && a.isString(value);
-                        const firstChar = valStr && value.substr(0, 1);
-                        const lastChar = valStr && value.substr(valueLen - 1);
-                        value = value === 'true' ? true : value;
-                        value = value === 'false' ? false : value;
-                        try {
-                            value = firstChar == '{' && lastChar == '}' || firstChar == '[' && lastChar == ']' ? JSON.parse(value) : value;
-                        } catch (e) {
-                        }
-                        props[modelAttr] = value;
-                    } else {
-                        attrs[key] = value;
-                    }
-                });
-                return {
-                    props,
-                    attrs
-                };
-            },
-            parseStyle(str) {
-                var result = {};
-                var decls = str.split(';');
-                for (var i = 0, len = decls.length; i < len; i++) {
-                    var decl = decls[i].trim();
-                    if (!decl)
-                        continue;
-                    var prop = decl.split(':');
-                    result[prop[0].trim()] = prop.slice(1).join(':').trim();
-                }
-                return result;
-            },
-            parseClass(str) {
-                const result = [];
-                const cls = str.split(' ');
-                for (let i = 0, len = cls.length; i < len; i++) {
-                    const cl = cls[i].trim();
-                    if (!cl)
-                        continue;
-                    result.push(cl);
-                }
-                return result;
-            },
-            parseNode(el) {
-                const result = [];
-                const nodes = el.childNodes;
-                for (var i = 0, len = nodes.length; i < len; i++) {
-                    const node = nodes[i];
-                    const attrs = node.attributes || [];
-                    const attrsLen = attrs.length;
-                    const nodePrev = result[result.length - 1];
-                    const nodeChild = node.childNodes.length;
-                    const ct = this.compTypes;
-                    let model = {};
-                    if (ct) {
-                        let obj = '';
-                        let type = node.getAttribute && node.getAttribute(`${ modelAttrStart }type`);
-                        if (type) {
-                            model = { type };
-                        } else {
-                            for (let it = 0; it < ct.length; it++) {
-                                const compType = ct[it];
-                                obj = compType.model.isComponent(node);
-                                if (obj) {
-                                    if (typeof obj !== 'object') {
-                                        obj = { type: compType.id };
-                                    }
-                                    break;
-                                }
-                            }
-                            model = obj;
-                        }
-                    }
-                    if (!model.tagName) {
-                        model.tagName = node.tagName ? node.tagName.toLowerCase() : '';
-                    }
-                    if (attrsLen) {
-                        model.attributes = {};
-                    }
-                    for (let j = 0; j < attrsLen; j++) {
-                        const nodeName = attrs[j].nodeName;
-                        let nodeValue = attrs[j].nodeValue;
-                        if (nodeName == 'style') {
-                            model.style = this.parseStyle(nodeValue);
-                        } else if (nodeName == 'class') {
-                            model.classes = this.parseClass(nodeValue);
-                        } else if (nodeName == 'contenteditable') {
-                            continue;
-                        } else if (nodeName.indexOf(modelAttrStart) === 0) {
-                            const modelAttr = nodeName.replace(modelAttrStart, '');
-                            const valueLen = nodeValue.length;
-                            const firstChar = nodeValue && nodeValue.substr(0, 1);
-                            const lastChar = nodeValue && nodeValue.substr(valueLen - 1);
-                            nodeValue = nodeValue === 'true' ? true : nodeValue;
-                            nodeValue = nodeValue === 'false' ? false : nodeValue;
-                            try {
-                                nodeValue = firstChar == '{' && lastChar == '}' || firstChar == '[' && lastChar == ']' ? JSON.parse(nodeValue) : nodeValue;
-                            } catch (e) {
-                            }
-                            model[modelAttr] = nodeValue;
-                        } else {
-                            model.attributes[nodeName] = nodeValue;
-                        }
-                    }
-                    if (nodeChild && !model.components) {
-                        const firstChild = node.childNodes[0];
-                        if (nodeChild === 1 && firstChild.nodeType === 3) {
-                            !model.type && (model.type = 'text');
-                            model.content = firstChild.nodeValue;
-                        } else {
-                            model.components = this.parseNode(node);
-                        }
-                    }
-                    if (model.type == 'textnode') {
-                        if (nodePrev && nodePrev.type == 'textnode') {
-                            nodePrev.content += model.content;
-                            continue;
-                        }
-                        if (!config.keepEmptyTextNodes) {
-                            const content = node.nodeValue;
-                            if (content != ' ' && !content.trim()) {
-                                continue;
-                            }
-                        }
-                    }
-                    const comps = model.components;
-                    if (!model.type && comps) {
-                        let allTxt = 1;
-                        let foundTextNode = 0;
-                        for (let ci = 0; ci < comps.length; ci++) {
-                            const comp = comps[ci];
-                            const cType = comp.type;
-                            if ([
-                                    'text',
-                                    'textnode'
-                                ].indexOf(cType) < 0 && c.textTags.indexOf(comp.tagName) < 0) {
-                                allTxt = 0;
-                                break;
-                            }
-                            if (cType == 'textnode') {
-                                foundTextNode = 1;
-                            }
-                        }
-                        if (allTxt && foundTextNode) {
-                            model.type = 'text';
-                        }
-                    }
-                    if (!model.tagName && model.type != 'textnode') {
-                        continue;
-                    }
-                    result.push(model);
-                }
-                return result;
-            },
-            parse(str, parserCss) {
-                var config = c.em && c.em.get('Config') || {};
-                var res = {
-                    html: '',
-                    css: ''
-                };
-                var el = document.createElement('div');
-                el.innerHTML = str;
-                var scripts = el.querySelectorAll('script');
-                var i = scripts.length;
-                if (!config.allowScripts) {
-                    while (i--)
-                        scripts[i].parentNode.removeChild(scripts[i]);
-                }
-                if (parserCss) {
-                    var styleStr = '';
-                    var styles = el.querySelectorAll('style');
-                    var j = styles.length;
-                    while (j--) {
-                        styleStr = styles[j].innerHTML + styleStr;
-                        styles[j].parentNode.removeChild(styles[j]);
-                    }
-                    if (styleStr)
-                        res.css = parserCss.parse(styleStr);
-                }
-                var result = this.parseNode(el);
-                if (result.length == 1)
-                    result = result[0];
-                res.html = result;
-                return res;
-            }
-        };
-    };
-});
-define('domain_abstract/model/Styleable',[
-    'skylark-underscore',
-    '../../utils/mixins',
-    '../../parser/model/ParserHtml'
-], function (a, b, ParserHtml) {
-    'use strict';
-    const parseStyle = ParserHtml().parseStyle;
     return {
-        parseStyle,
-        extendStyle(prop) {
-            return {
-                ...this.getStyle(),
-                ...prop
-            };
-        },
-        getStyle() {
-            const style = this.get('style') || {};
-            return { ...style };
-        },
-        setStyle(prop = {}, opts = {}) {
-            if (a.isString(prop)) {
-                prop = parseStyle(prop);
-            }
-            const propOrig = this.getStyle();
-            const propNew = { ...prop };
-            this.set('style', propNew, opts);
-            const diff = b.shallowDiff(propOrig, propNew);
-            a.keys(diff).forEach(pr => {
-                const em = this.em;
-                this.trigger(`change:style:${ pr }`);
-                if (em) {
-                    em.trigger(`styleable:change`, this, pr);
-                    em.trigger(`styleable:change:${ pr }`, this, pr);
-                }
-            });
-            return propNew;
-        },
-        addStyle(prop, value = '', opts = {}) {
-            if (typeof prop == 'string') {
-                prop = { prop: value };
-            } else {
-                opts = value || {};
-            }
-            prop = this.extendStyle(prop);
-            this.setStyle(prop, opts);
-        },
-        removeStyle(prop) {
-            let style = this.getStyle();
-            delete style[prop];
-            this.setStyle(style);
-        },
-        styleToString(opts = {}) {
-            const result = [];
-            const style = this.getStyle();
-            for (let prop in style) {
-                const imp = opts.important;
-                const important = a.isArray(imp) ? imp.indexOf(prop) >= 0 : imp;
-                const value = `${ style[prop] }${ important ? ' !important' : '' }`;
-                const propPrv = prop.substr(0, 2) == '__';
-                value && !propPrv && result.push(`${ prop }:${ value };`);
-            }
-            return result.join('');
-        },
-        getSelectors() {
-            return this.get('selectors') || this.get('classes');
-        },
-        getSelectorsString() {
-            return this.selectorsToString ? this.selectorsToString() : this.getSelectors().getFullString();
+        run(ed) {
+            ed.DomComponents.clear();
+            ed.CssComposer.clear();
         }
     };
 });
-define('dom_components/model/Components',[
-    "skylark-langx/langx",
-    'skylark-backbone',
-    'skylark-underscore'
-], function (langx,Backbone, _) {
+define('skylark-grapejs/commands/view/CanvasMove',[
+    'skylark-underscore',
+    '../../utils/mixins',
+    '../../utils/Dragger'
+], function (_, mixins, Dragger) {
     'use strict';
-    let Component;
-    return Backbone.Collection.extend({
-        initialize(models, opt = {}) {
-            this.opt = opt;
-            this.listenTo(this, 'add', this.onAdd);
-            this.config = opt.config;
-            this.em = opt.em;
-            const {em} = this;
-            this.model = (attrs, options) => {
-                var model;
-                const df = opt.em.get('DomComponents').componentTypes;
-                options.em = opt.em;
-                options.config = opt.config;
-                options.componentTypes = df;
-                options.domc = opt.domc;
-                for (var it = 0; it < df.length; it++) {
-                    var dfId = df[it].id;
-                    if (dfId == attrs.type) {
-                        model = df[it].model;
-                        break;
+    return {
+        run(ed) {
+            _.bindAll(this, 'onKeyUp', 'enableDragger', 'disableDragger');
+            this.editor = ed;
+            this.canvasModel = this.canvas.getCanvasView().model;
+            this.toggleMove(1);
+        },
+        stop(ed) {
+            this.toggleMove();
+            this.disableDragger();
+        },
+        onKeyUp(ev) {
+            if (mixins.getKeyChar(ev) === ' ') {
+                this.editor.stopCommand(this.id);
+            }
+        },
+        enableDragger(ev) {
+            this.toggleDragger(1, ev);
+        },
+        disableDragger(ev) {
+            this.toggleDragger(0, ev);
+        },
+        toggleDragger(enable, ev) {
+            const {canvasModel, em} = this;
+            let {dragger} = this;
+            const methodCls = enable ? 'add' : 'remove';
+            this.getCanvas().classList[methodCls](`${ this.ppfx }is__grabbing`);
+            if (!dragger) {
+                dragger = new Dragger({
+                    getPosition() {
+                        return {
+                            x: canvasModel.get('x'),
+                            y: canvasModel.get('y')
+                        };
+                    },
+                    setPosition({x, y}) {
+                        canvasModel.set({
+                            x,
+                            y
+                        });
+                    },
+                    onStart(ev, dragger) {
+                        em.trigger('canvas:move:start', dragger);
+                    },
+                    onDrag(ev, dragger) {
+                        em.trigger('canvas:move', dragger);
+                    },
+                    onEnd(ev, dragger) {
+                        em.trigger('canvas:move:end', dragger);
                     }
+                });
+                this.dragger = dragger;
+            }
+            enable ? dragger.start(ev) : dragger.stop();
+        },
+        toggleMove(enable) {
+            const {ppfx} = this;
+            const methodCls = enable ? 'add' : 'remove';
+            const methodEv = enable ? 'on' : 'off';
+
+            const canvas = this.getCanvas();
+            const classes = [`${ ppfx }is__grab`];
+            !enable && classes.push(`${ ppfx }is__grabbing`);
+            classes.forEach(cls => canvas.classList[methodCls](cls));
+            mixins[methodEv](document, 'keyup', this.onKeyUp);
+            mixins[methodEv](canvas, 'mousedown', this.enableDragger);
+            mixins[methodEv](document, 'mouseup', this.disableDragger);
+        }
+    };
+});
+define('skylark-grapejs/commands/view/ComponentDelete',['skylark-underscore'], function (a) {
+    'use strict';
+    return {
+        run(ed, sender, opts = {}) {
+            let components = opts.component || ed.getSelectedAll();
+            components = a.isArray(components) ? [...components] : [components];
+            ed.select(null);
+            components.forEach(component => {
+                if (!component || !component.get('removable')) {
+                    return this.em.logWarning('The element is not removable', { component });
                 }
-                if (!model) {
-                    model = df[df.length - 1].model;
-                    em && attrs.type && em.logWarning(`Component type '${ attrs.type }' not found`, {
-                        attrs,
-                        options
-                    });
-                }
-                return new model(attrs, options);
+                component.remove();
+            });
+            return components;
+        }
+    };
+});
+define('skylark-grapejs/commands/view/ComponentDrag',[
+    'skylark-underscore',
+    '../../utils/Dragger'
+], function (a, Dragger) {
+    'use strict';
+    const evName = 'dmode';
+    return {
+        run(editor, sender, opts = {}) {
+            a.bindAll(this, 'setPosition', 'onStart', 'onDrag', 'onEnd', 'getPosition', 'getGuidesStatic', 'renderGuide', 'getGuidesTarget');
+            const {target, event, mode, dragger = {}} = opts;
+            const el = target.getEl();
+            const config = {
+                doc: el.ownerDocument,
+                onStart: this.onStart,
+                onEnd: this.onEnd,
+                onDrag: this.onDrag,
+                getPosition: this.getPosition,
+                setPosition: this.setPosition,
+                guidesStatic: () => this.guidesStatic,
+                guidesTarget: () => this.guidesTarget,
+                ...dragger
+            };
+            this.setupGuides();
+            this.opts = opts;
+            this.editor = editor;
+            this.em = editor.getModel();
+            this.target = target;
+            this.isTran = mode == 'translate';
+            this.guidesContainer = this.getGuidesContainer();
+            this.guidesTarget = this.getGuidesTarget();
+            this.guidesStatic = this.getGuidesStatic();
+            let drg = this.dragger;
+            if (!drg) {
+                drg = new Dragger(config);
+                this.dragger = drg;
+            } else {
+                drg.setOptions(config);
+            }
+            event && drg.start(event);
+            this.toggleDrag(1);
+            this.em.trigger(`${ evName }:start`, this.getEventOpts());
+            return drg;
+        },
+        getEventOpts() {
+            return {
+                mode: this.opts.mode,
+                target: this.target,
+                guidesTarget: this.guidesTarget,
+                guidesStatic: this.guidesStatic
             };
         },
-        parseString(value, opt = {}) {
-            const {em} = this;
-            const {domc} = this.opt;
-            const cssc = em.get('CssComposer');
-            const parsed = em.get('Parser').parseHtml(value);
-            if (!Component)
-                Component = require('./Component').default;
-            Component.checkId(parsed.html, parsed.css, domc.componentsById);
-            if (parsed.css && cssc && !opt.temporary) {
-                cssc.addCollection(parsed.css, langx.mixin({},opt,{
-                    extend: 1
-                }));
-            }
-            return parsed.html;
+        stop() {
+            this.toggleDrag();
         },
-        add(models, opt = {}) {
-            if (_.isString(models)) {
-                models = this.parseString(models, opt);
-            } else if (_.isArray(models)) {
-                models.forEach((item, index) => {
-                    if (_.isString(item)) {
-                        models[index] = this.parseString(item, opt);
-                    }
+        setupGuides() {
+            (this.guides || []).forEach(item => {
+                const {guide} = item;
+                guide && guide.parentNode.removeChild(guide);
+            });
+            this.guides = [];
+        },
+        getGuidesContainer() {
+            let {guidesEl} = this;
+            if (!guidesEl) {
+                const {editor, em, opts} = this;
+                const pfx = editor.getConfig('stylePrefix');
+                const elInfoX = document.createElement('div');
+                const elInfoY = document.createElement('div');
+                const guideContent = `<div class="${ pfx }guide-info__line ${ pfx }danger-bg">
+        <div class="${ pfx }guide-info__content ${ pfx }danger-color"></div>
+      </div>`;
+                guidesEl = document.createElement('div');
+                guidesEl.className = `${ pfx }guides`;
+                elInfoX.className = `${ pfx }guide-info ${ pfx }guide-info__x`;
+                elInfoY.className = `${ pfx }guide-info ${ pfx }guide-info__y`;
+                elInfoX.innerHTML = guideContent;
+                elInfoY.innerHTML = guideContent;
+                guidesEl.appendChild(elInfoX);
+                guidesEl.appendChild(elInfoY);
+                editor.Canvas.getGlobalToolsEl().appendChild(guidesEl);
+                this.guidesEl = guidesEl;
+                this.elGuideInfoX = elInfoX;
+                this.elGuideInfoY = elInfoY;
+                this.elGuideInfoContentX = elInfoX.querySelector(`.${ pfx }guide-info__content`);
+                this.elGuideInfoContentY = elInfoY.querySelector(`.${ pfx }guide-info__content`);
+                em.on('canvas:update frame:scroll', a.debounce(() => {
+                    this.updateGuides();
+                    opts.debug && this.guides.forEach(item => this.renderGuide(item));
+                }, 200));
+            }
+            return guidesEl;
+        },
+        getGuidesStatic() {
+            let result = [];
+            const el = this.target.getEl();
+            const {
+                parentNode = {}
+            } = el;
+            a.each(parentNode.children, item => result = result.concat(el !== item ? this.getElementGuides(item) : []));
+            return result.concat(this.getElementGuides(parentNode));
+        },
+        getGuidesTarget() {
+            return this.getElementGuides(this.target.getEl());
+        },
+        updateGuides(guides) {
+            let lastEl, lastPos;
+            (guides || this.guides).forEach(item => {
+                const {origin} = item;
+                const pos = lastEl === origin ? lastPos : this.getElementPos(origin);
+                lastEl = origin;
+                lastPos = pos;
+                a.each(this.getGuidePosUpdate(item, pos), (val, key) => item[key] = val);
+                item.originRect = pos;
+            });
+        },
+        getGuidePosUpdate(item, rect) {
+            const result = {};
+            const {top, height, left, width} = rect;
+            switch (item.type) {
+            case 't':
+                result.y = top;
+                break;
+            case 'b':
+                result.y = top + height;
+                break;
+            case 'l':
+                result.x = left;
+                break;
+            case 'r':
+                result.x = left + width;
+                break;
+            case 'x':
+                result.x = left + width / 2;
+                break;
+            case 'y':
+                result.y = top + height / 2;
+                break;
+            }
+            return result;
+        },
+        renderGuide(item = {}) {
+            const el = item.guide || document.createElement('div');
+            const un = 'px';
+            const guideSize = item.active ? 2 : 1;
+            let numEl = el.children[0];
+            el.style = `position: absolute; background-color: ${ item.active ? 'green' : 'red' };`;
+            if (!el.children.length) {
+                numEl = document.createElement('div');
+                numEl.style = 'position: absolute; color: red; padding: 5px; top: 0; left: 0;';
+                el.appendChild(numEl);
+            }
+            if (item.y) {
+                el.style.width = '100%';
+                el.style.height = `${ guideSize }${ un }`;
+                el.style.top = `${ item.y }${ un }`;
+                el.style.left = 0;
+            } else {
+                el.style.width = `${ guideSize }${ un }`;
+                el.style.height = '100%';
+                el.style.left = `${ item.x }${ un }`;
+                el.style.top = `0${ un }`;
+            }
+            !item.guide && this.guidesContainer.appendChild(el);
+            return el;
+        },
+        getElementPos(el) {
+            return this.editor.Canvas.getElementPos(el, { noScroll: 1 });
+        },
+        getElementGuides(el) {
+            const {opts} = this;
+            const originRect = this.getElementPos(el);
+            const {top, height, left, width} = originRect;
+            const guides = [
+                {
+                    type: 't',
+                    y: top
+                },
+                {
+                    type: 'b',
+                    y: top + height
+                },
+                {
+                    type: 'l',
+                    x: left
+                },
+                {
+                    type: 'r',
+                    x: left + width
+                },
+                {
+                    type: 'x',
+                    x: left + width / 2
+                },
+                {
+                    type: 'y',
+                    y: top + height / 2
+                }
+            ].map(item => ({
+                ...item,
+                origin: el,
+                originRect,
+                guide: opts.debug && this.renderGuide(item)
+            }));
+            guides.forEach(item => this.guides.push(item));
+            return guides;
+        },
+        getTranslate(transform, axis = 'x') {
+            let result = 0;
+            (transform || '').split(' ').forEach(item => {
+                const itemStr = item.trim();
+                const fn = `translate${ axis.toUpperCase() }(`;
+                if (itemStr.indexOf(fn) === 0)
+                    result = parseFloat(itemStr.replace(fn, ''));
+            });
+            return result;
+        },
+        setTranslate(transform, axis, value) {
+            const fn = `translate${ axis.toUpperCase() }(`;
+            const val = `${ fn }${ value })`;
+            let result = (transform || '').split(' ').map(item => {
+                const itemStr = item.trim();
+                if (itemStr.indexOf(fn) === 0)
+                    item = val;
+                return item;
+            }).join(' ');
+            if (result.indexOf(fn) < 0)
+                result += ` ${ val }`;
+            return result;
+        },
+        getPosition() {
+            const {target, isTran} = this;
+            const {left, top, transform} = target.getStyle();
+            let x = 0;
+            let y = 0;
+            if (isTran) {
+                x = this.getTranslate(transform);
+                y = this.getTranslate(transform, 'y');
+            } else {
+                x = parseFloat(left);
+                y = parseFloat(top);
+            }
+            return {
+                x,
+                y
+            };
+        },
+        setPosition({x, y, end, position, width, height}) {
+            const {target, isTran} = this;
+            const unit = 'px';
+            const en = !end ? 1 : '';
+            const left = `${ x }${ unit }`;
+            const top = `${ y }${ unit }`;
+            if (isTran) {
+                let transform = target.getStyle()['transform'] || '';
+                transform = this.setTranslate(transform, 'x', left);
+                transform = this.setTranslate(transform, 'y', top);
+                return target.addStyle({
+                    transform,
+                    en
+                }, { avoidStore: !end });
+            }
+            const adds = {
+                position,
+                width,
+                height
+            };
+            const style = {
+                left,
+                top,
+                en
+            };
+            a.keys(adds).forEach(add => {
+                const prop = adds[add];
+                if (prop)
+                    style[add] = prop;
+            });
+            target.addStyle(style, { avoidStore: !end });
+        },
+        _getDragData() {
+            const {target} = this;
+            return {
+                target,
+                parent: target.parent(),
+                index: target.index()
+            };
+        },
+        onStart() {
+            const {target, editor, isTran, opts} = this;
+            const {center, onStart} = opts;
+            const {Canvas} = editor;
+            const style = target.getStyle();
+            const position = 'absolute';
+            onStart && onStart(this._getDragData());
+            if (isTran)
+                return;
+            if (style.position !== position) {
+                let {left, top, width, height} = Canvas.offset(target.getEl());
+                if (center) {
+                    const {x, y} = Canvas.getMouseRelativeCanvas(event);
+                    left = x;
+                    top = y;
+                }
+                this.setPosition({
+                    x: left,
+                    y: top,
+                    width: `${ width }px`,
+                    height: `${ height }px`,
+                    position
                 });
             }
-            const isMult = _.isArray(models);
-            models = (isMult ? models : [models]).filter(i => i).map(model => this.processDef(model));
-            models = isMult ? models : models[0];
-            return Backbone.Collection.prototype.add.apply(this, [
-                models,
-                opt
-            ]);
         },
-        processDef(mdl) {
-            if (mdl.cid && mdl.ccid)
-                return mdl;
-            const {em, config = {}} = this;
-            const {processor} = config;
-            let model = mdl;
-            if (processor) {
-                model = { ...model };
-                const modelPr = processor(model);
-                if (modelPr) {
-                    _.each(model, (val, key) => delete model[key]);
-                    _.extend(model, modelPr);
+        onDrag(...args) {
+            const {guidesTarget, opts} = this;
+            const {onDrag} = opts;
+            this.updateGuides(guidesTarget);
+            opts.debug && guidesTarget.forEach(item => this.renderGuide(item));
+            opts.guidesInfo && this.renderGuideInfo(guidesTarget.filter(item => item.active));
+            onDrag && onDrag(this._getDragData());
+        },
+        onEnd(ev, dragger, opt = {}) {
+            const {editor, opts, id} = this;
+            const {onEnd} = opts;
+            onEnd && onEnd(ev, opt, {
+                event: ev,
+                ...opt,
+                ...this._getDragData()
+            });
+            editor.stopCommand(id);
+            this.hideGuidesInfo();
+            this.em.trigger(`${ evName }:end`, this.getEventOpts());
+        },
+        hideGuidesInfo() {
+            [
+                'X',
+                'Y'
+            ].forEach(item => {
+                const guide = this[`elGuideInfo${ item }`];
+                if (guide)
+                    guide.style.display = 'none';
+            });
+        },
+        renderGuideInfo(guides = []) {
+            const {guidesStatic} = this;
+            this.hideGuidesInfo();
+            guides.forEach(item => {
+                const {origin, x} = item;
+                const rectOrigin = this.getElementPos(origin);
+                const axis = a.isUndefined(x) ? 'y' : 'x';
+                const isY = axis === 'y';
+                const origEdge1 = rectOrigin[isY ? 'left' : 'top'];
+                const origEdge1Raw = rectOrigin.rect[isY ? 'left' : 'top'];
+                const origEdge2 = isY ? origEdge1 + rectOrigin.width : origEdge1 + rectOrigin.height;
+                const origEdge2Raw = isY ? origEdge1Raw + rectOrigin.rect.width : origEdge1Raw + rectOrigin.rect.height;
+                const elGuideInfo = this[`elGuideInfo${ axis.toUpperCase() }`];
+                const elGuideInfoCnt = this[`elGuideInfoContent${ axis.toUpperCase() }`];
+                const guideInfoStyle = elGuideInfo.style;
+                const res = guidesStatic.filter(stat => stat.type === item.type).map(stat => {
+                    const {left, width, top, height} = stat.originRect;
+                    const statEdge1 = isY ? left : top;
+                    const statEdge2 = isY ? left + width : top + height;
+                    return {
+                        gap: statEdge2 < origEdge1 ? origEdge1 - statEdge2 : statEdge1 - origEdge2,
+                        guide: stat
+                    };
+                }).filter(item => item.gap > 0).sort((a, b) => a.gap - b.gap).map(item => item.guide)[0];
+                if (res) {
+                    const {left, width, top, height, rect} = res.originRect;
+                    const isEdge1 = isY ? left < rectOrigin.left : top < rectOrigin.top;
+                    const statEdge1 = isY ? left : top;
+                    const statEdge1Raw = isY ? rect.left : rect.top;
+                    const statEdge2 = isY ? left + width : top + height;
+                    const statEdge2Raw = isY ? rect.left + rect.width : rect.top + rect.height;
+                    const posFirst = isY ? item.y : item.x;
+                    const posSecond = isEdge1 ? statEdge2 : origEdge2;
+                    const pos2 = `${ posFirst }px`;
+                    const size = isEdge1 ? origEdge1 - statEdge2 : statEdge1 - origEdge2;
+                    const sizeRaw = isEdge1 ? origEdge1Raw - statEdge2Raw : statEdge1Raw - origEdge2Raw;
+                    guideInfoStyle.display = '';
+                    guideInfoStyle[isY ? 'top' : 'left'] = pos2;
+                    guideInfoStyle[isY ? 'left' : 'top'] = `${ posSecond }px`;
+                    guideInfoStyle[isY ? 'width' : 'height'] = `${ size }px`;
+                    elGuideInfoCnt.innerHTML = `${ Math.round(sizeRaw) }px`;
+                    this.em.trigger(`${ evName }:active`, {
+                        ...this.getEventOpts(),
+                        guide: item,
+                        guidesStatic,
+                        matched: res,
+                        posFirst,
+                        posSecond,
+                        size,
+                        sizeRaw,
+                        elGuideInfo,
+                        elGuideInfoCnt
+                    });
                 }
-            }
-            if (model.$$typeof && typeof model.props == 'object') {
-                model = { ...model };
-                model.props = { ...model.props };
-                const domc = em.get('DomComponents');
-                const parser = em.get('Parser');
-                const {parserHtml} = parser;
-                _.each(model, (value, key) => {
-                    if (!_.includes([
-                            'props',
-                            'type'
-                        ], key))
-                        delete model[key];
+            });
+        },
+        toggleDrag(enable) {
+            const {ppfx, editor} = this;
+            const methodCls = enable ? 'add' : 'remove';
+            const classes = [`${ ppfx }is__grabbing`];
+            const {Canvas} = editor;
+            const body = Canvas.getBody();
+            classes.forEach(cls => body.classList[methodCls](cls));
+            Canvas[enable ? 'startAutoscroll' : 'stopAutoscroll']();
+        }
+    };
+});
+define('skylark-grapejs/commands/view/ComponentEnter',[],function () {
+    'use strict';
+    return {
+        run(ed) {
+            if (!ed.Canvas.hasFocus())
+                return;
+            const toSelect = [];
+            ed.getSelectedAll().forEach(component => {
+                const coll = component.components();
+                const next = coll && coll.at(0);
+                next && toSelect.push(next);
+            });
+            toSelect.length && ed.select(toSelect);
+        }
+    };
+});
+define('skylark-grapejs/commands/view/ComponentExit',[],function () {
+    'use strict';
+    return {
+        run(ed, snd, opts = {}) {
+            if (!ed.Canvas.hasFocus() && !opts.force)
+                return;
+            const toSelect = [];
+            ed.getSelectedAll().forEach(component => {
+                let next = component.parent();
+                while (next && !next.get('selectable')) {
+                    next = next.parent();
+                }
+                next && toSelect.push(next);
+            });
+            toSelect.length && ed.select(toSelect);
+        }
+    };
+});
+define('skylark-grapejs/commands/view/ComponentNext',[],function () {
+    'use strict';
+    return {
+        run(ed) {
+            if (!ed.Canvas.hasFocus())
+                return;
+            const toSelect = [];
+            ed.getSelectedAll().forEach(component => {
+                const coll = component.collection;
+                const at = coll.indexOf(component);
+                const next = coll.at(at + 1);
+                toSelect.push(next || component);
+            });
+            toSelect.length && ed.select(toSelect);
+        }
+    };
+});
+define('skylark-grapejs/commands/view/ComponentPrev',[],function () {
+    'use strict';
+    return {
+        run(ed) {
+            if (!ed.Canvas.hasFocus())
+                return;
+            const toSelect = [];
+            ed.getSelectedAll().forEach(component => {
+                const coll = component.collection;
+                const at = coll.indexOf(component);
+                const next = coll.at(at - 1);
+                toSelect.push(next && at - 1 >= 0 ? next : component);
+            });
+            toSelect.length && ed.select(toSelect);
+        }
+    };
+});
+define('skylark-grapejs/commands/view/ComponentStyleClear',['skylark-underscore'], function (a) {
+    'use strict';
+    return {
+        run(ed, sender, opts = {}) {
+            const {target} = opts;
+            const dc = ed.DomComponents;
+            const type = target.get('type');
+            const len = dc.getWrapper().find(`[data-gjs-type="${ type }"]`).length;
+            const toRemove = [];
+            if (!len) {
+                const rules = ed.CssComposer.getAll();
+                let toClear = target.get('style-signature');
+                toClear = a.isArray(toClear) ? toClear : [toClear];
+                rules.forEach(rule => {
+                    const selector = rule.selectorsToString();
+                    toClear.forEach(part => {
+                        part && selector.indexOf(part) >= 0 && toRemove.push(rule);
+                    });
                 });
-                const {props} = model;
-                const comps = props.children;
-                delete props.children;
-                delete model.props;
-                const res = parserHtml.splitPropsFromAttr(props);
-                model.attributes = res.attrs;
-                if (comps) {
-                    model.components = comps;
-                }
-                if (!model.type) {
-                    model.type = 'textnode';
-                } else if (!domc.getType(model.type)) {
-                    model.tagName = model.type;
-                    delete model.type;
-                }
-                _.extend(model, res.props);
+                rules.remove(toRemove);
             }
-            return model;
+            return toRemove;
+        }
+    };
+});
+define('skylark-grapejs/commands/view/CopyComponent',[],function () {
+    'use strict';
+    return {
+        run(ed) {
+            const em = ed.getModel();
+            const models = [...ed.getSelectedAll()];
+            if (models.length) {
+                em.set('clipboard', models);
+            }
+        }
+    };
+});
+define('skylark-grapejs/dom_components/view/ToolbarButtonView',['skylark-backbone'], function (Backbone) {
+    'use strict';
+    return Backbone.View.extend({
+        events() {
+            return this.model.get('events') || { mousedown: 'handleClick' };
         },
-        onAdd(model, c, opts = {}) {
-            const em = this.em;
-            const style = model.getStyle();
-            const avoidInline = em && em.getConfig('avoidInlineStyle');
-            if (!_.isEmpty(style) && !avoidInline && em && em.get && em.getConfig('forceClass') && !opts.temporary) {
-                const name = model.cid;
-                const rule = em.get('CssComposer').setClassRule(name, style);
-                model.setStyle({});
-                model.addClass(name);
+        attributes() {
+            return this.model.get('attributes');
+        },
+        initialize(opts = {}) {
+            const {
+                config = {}
+            } = opts;
+            this.em = config.em;
+            this.editor = config.editor;
+        },
+        handleClick(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const {editor, em} = this;
+            const {left, top} = editor.Canvas.getFrameEl().getBoundingClientRect();
+            const calibrated = {
+                ...event,
+                clientX: event.clientX - left,
+                clientY: event.clientY - top
+            };
+            em.trigger('toolbar:run:before');
+            this.execCommand(calibrated);
+        },
+        execCommand(event) {
+            const opts = { event };
+            const command = this.model.get('command');
+            const editor = this.editor;
+            if (typeof command === 'function') {
+                command(editor, null, opts);
             }
+            if (typeof command === 'string') {
+                editor.runCommand(command, opts);
+            }
+        },
+        render() {
+            const {editor, $el, model} = this;
+            const id = model.get('id');
+            const label = model.get('label');
+            const pfx = editor.getConfig('stylePrefix');
+            $el.addClass(`${ pfx }toolbar-item`);
+            id && $el.addClass(`${ pfx }toolbar-item__${ id }`);
+            label && $el.append(label);
+            return this;
         }
     });
 });
-define('trait_manager/model/Trait',[
-    'skylark-backbone',
-    'skylark-underscore'
-], function (Backbone, a) {
+define('skylark-grapejs/dom_components/view/ToolbarView',[
+    '../../domain_abstract/view/DomainViews',
+    './ToolbarButtonView'
+], function (DomainViews, ToolbarButtonView) {
+    'use strict';
+    return DomainViews.extend({
+        itemView: ToolbarButtonView,
+        initialize(opts = {}) {
+            this.config = {
+                editor: opts.editor || '',
+                em: opts.em
+            };
+            this.listenTo(this.collection, 'reset', this.render);
+        }
+    });
+});
+define('skylark-grapejs/dom_components/model/ToolbarButton',['skylark-backbone'], function (Backbone) {
     'use strict';
     return Backbone.Model.extend({
         defaults: {
-            type: 'text',
-            label: '',
-            name: '',
-            min: '',
-            max: '',
-            unit: '',
-            step: 1,
-            value: '',
-            target: '',
-            default: '',
-            placeholder: '',
-            changeProp: 0,
-            options: []
-        },
-        initialize() {
-            const target = this.get('target');
-            const name = this.get('name');
-            const changeProp = this.get('changeProp');
-            if (target) {
-                this.target = target;
-                this.unset('target');
-                const targetEvent = changeProp ? `change:${ name }` : `change:attributes:${ name }`;
-                this.listenTo(target, targetEvent, this.targetUpdated);
-            }
-        },
-        props() {
-            return this.attributes;
-        },
-        targetUpdated() {
-            const value = this.getTargetValue();
-            this.set({ value }, { fromTarget: 1 });
-        },
-        getTargetValue() {
-            const name = this.get('name');
-            const target = this.target;
-            let value;
-            if (this.get('changeProp')) {
-                value = target.get(name);
-            } else {
-                value = target.getAttributes()[name];
-            }
-            return !a.isUndefined(value) ? value : '';
-        },
-        setTargetValue(value, opts = {}) {
-            const target = this.target;
-            const name = this.get('name');
-            if (a.isUndefined(value))
-                return;
-            let valueToSet = value;
-            if (value === 'false') {
-                valueToSet = false;
-            } else if (value === 'true') {
-                valueToSet = true;
-            }
-            if (this.get('changeProp')) {
-                target.set(name, valueToSet, opts);
-            } else {
-                const attrs = { ...target.get('attributes') };
-                attrs[name] = valueToSet;
-                target.set('attributes', attrs, opts);
-            }
-        },
-        setValueFromInput(value, final = 1, opts = {}) {
-            const toSet = { value };
-            this.set(toSet, {
-                ...opts,
-                avoidStore: 1
-            });
-            if (final) {
-                this.set('value', '', opts);
-                this.set(toSet, opts);
-            }
-        },
-        getInitValue() {
-            const target = this.target;
-            const name = this.get('name');
-            let value;
-            if (target) {
-                const attrs = target.get('attributes');
-                value = this.get('changeProp') ? target.get(name) : attrs[name];
-            }
-            return value || this.get('value') || this.get('default');
+            command: '',
+            attributes: {}
         }
     });
 });
-define('trait_manager/model/TraitFactory',[],function () {
-    'use strict';
-    return (config = {}) => ({
-        build(props) {
-            var objs = [];
-            if (typeof props === 'string')
-                props = [props];
-            for (var i = 0; i < props.length; i++) {
-                var obj = {};
-                var prop = props[i];
-                obj.name = prop;
-                switch (prop) {
-                case 'target':
-                    obj.type = 'select';
-                    break;
-                }
-                switch (prop) {
-                case 'target':
-                    obj.options = config.optionsTarget;
-                    break;
-                }
-                objs.push(obj);
-            }
-            return objs;
-        }
-    });
-});
-define('trait_manager/model/Traits',[
+define('skylark-grapejs/dom_components/model/Toolbar',[
     'skylark-backbone',
-    'skylark-underscore',
-    './Trait',
-    './TraitFactory'
-], function (Backbone, a, Trait, TraitFactory) {
+    './ToolbarButton'
+], function (Backbone, ToolbarButton) {
     'use strict';
-    return Backbone.Collection.extend({
-        model: Trait,
-        initialize(coll, options = {}) {
-            this.em = options.em || '';
-            this.listenTo(this, 'add', this.handleAdd);
-            this.listenTo(this, 'reset', this.handleReset);
-        },
-        handleReset(coll, {
-            previousModels = []
-        } = {}) {
-            previousModels.forEach(model => model.trigger('remove'));
-        },
-        handleAdd(model) {
-            const target = this.target;
-            if (target) {
-                model.target = target;
-            }
-        },
-        setTarget(target) {
-            this.target = target;
-        },
-        add(models, opt) {
-            const em = this.em;
-            if (a.isString(models) || a.isArray(models)) {
-                const tm = em && em.get && em.get('TraitManager');
-                const tmOpts = tm && tm.getConfig();
-                const tf = TraitFactory(tmOpts);
-                if (a.isString(models)) {
-                    models = [models];
-                }
-                for (var i = 0, len = models.length; i < len; i++) {
-                    const str = models[i];
-                    const model = a.isString(str) ? tf.build(str)[0] : str;
-                    model.target = this.target;
-                    models[i] = model;
-                }
-            }
-            return Backbone.Collection.prototype.add.apply(this, [
-                models,
-                opt
-            ]);
-        }
-    });
+    return Backbone.Collection.extend({ model: ToolbarButton });
 });
-define('dom_components/model/Component',[
-    "skylark-langx/langx",
+define('skylark-grapejs/commands/view/SelectComponent',[
+    'skylark-backbone',
     'skylark-underscore',
     '../../utils/mixins',
-    '../../domain_abstract/model/Styleable',
-    'skylark-backbone',
-    './Components',
-    '../../selector_manager/model/Selector',
-    '../../selector_manager/model/Selectors',
-    '../../trait_manager/model/Traits'
-], function (langx,_, b, Styleable, Backbone, Components, Selector, Selectors, Traits) {
+    '../../dom_components/view/ToolbarView',
+    '../../dom_components/model/Toolbar'
+], function (Backbone, a, mixins, ToolbarView, Toolbar) {
     'use strict';
-    const componentList = {};
-    let componentIndex = 0;
-    const escapeRegExp = str => {
-        return str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
-    };
-    const avoidInline = em => em && em.getConfig('avoidInlineStyle');
-    const eventDrag = 'component:drag';
-    const Component = Backbone.Model.extend(Styleable).extend({
-        defaults: {
-            tagName: 'div',
-            type: '',
-            name: '',
-            removable: true,
-            draggable: true,
-            droppable: true,
-            badgable: true,
-            stylable: true,
-            'stylable-require': '',
-            'style-signature': '',
-            unstylable: '',
-            highlightable: true,
-            copyable: true,
-            resizable: false,
-            editable: false,
-            layerable: true,
-            selectable: true,
-            hoverable: true,
-            void: false,
-            state: '',
-            status: '',
-            content: '',
-            icon: '',
-            style: '',
-            classes: '',
-            script: '',
-            'script-export': '',
-            attributes: '',
-            traits: [
-                'id',
-                'title'
-            ],
-            propagate: '',
-            dmode: '',
-            toolbar: null
+    const $ = Backbone.$;
+    let showOffsets;
+    return {
+        init(o) {
+            a.bindAll(this, 'onHover', 'onOut', 'onClick', 'onFrameScroll', 'onFrameUpdated');
         },
-        init() {
+        enable() {
+            this.frameOff = this.canvasOff = this.adjScroll = null;
+            this.startSelectComponent();
+            showOffsets = 1;
         },
-        updated(property, value, previous) {
+        startSelectComponent() {
+            this.toggleSelectComponent(1);
+            this.em.getSelected() && this.onSelect();
         },
-        removed() {
+        stopSelectComponent() {
+            this.toggleSelectComponent();
         },
-        initialize(props = {}, opt = {}) {
-            const em = opt.em;
-            const parent = this.parent();
-            const parentAttr = parent && parent.attributes;
-            if (parentAttr && parentAttr.propagate) {
-                let newAttr = {};
-                const toPropagate = parentAttr.propagate;
-                toPropagate.undefined(prop => newAttr[prop] = parent.get(prop));
-                newAttr.propagate = toPropagate;
-                newAttr = langx.mixin({},newAttr,props);
-                this.set(newAttr);
-            }
-            const propagate = this.get('propagate');
-            propagate && this.set('propagate', _.isArray(propagate) ? propagate : [propagate]);
-            if (opt && opt.config && opt.config.voidElements.indexOf(this.get('tagName')) >= 0) {
-                this.set('void', true);
-            }
-            opt.em = em;
-            this.opt = opt;
-            this.em = em;
-            this.frame = opt.frame;
-            this.config = opt.config || {};
-            this.set('attributes', langx.mixin({},this.defaults.attributes ,this.get('attributes') ));
-            this.ccid = Component.createId(this);
-            this.initClasses();
-            this.initTraits();
-            this.initComponents();
-            this.initToolbar();
-            this.listenTo(this, 'change:script', this.scriptUpdated);
-            this.listenTo(this, 'change:tagName', this.tagUpdated);
-            this.listenTo(this, 'change:attributes', this.attrUpdated);
-            this.listenTo(this, 'change:attributes:id', this._idUpdated);
-            this.set('status', '');
-            this.views = [];
-            [
-                'classes',
-                'traits',
-                'components'
-            ].undefined(name => {
-                const events = `add remove ${ name !== 'components' ? 'change' : '' }`;
-                this.listenTo(this.get(name), events.trim(), (...args) => this.emitUpdate(name, ...args));
-            });
-            if (!opt.temporary) {
-                this.init();
-                em && em.trigger('component:create', this);
-            }
-        },
-        is(type) {
-            return !!(this.get('type') == type);
-        },
-        props() {
-            return this.attributes;
-        },
-        index() {
-            const {collection} = this;
-            return collection && collection.indexOf(this);
-        },
-        setDragMode(value) {
-            return this.set('dmode', value);
-        },
-        find(query) {
-            const result = [];
-            const $els = this.view.$el.find(query);
-            $els.each(i => {
-                const $el = $els.eq(i);
-                const model = $el.data('model');
-                model && result.push(model);
-            });
-            return result;
-        },
-        findType(id) {
-            const result = [];
-            const find = components => components.undefined(item => {
-                item.is(id) && result.push(item);
-                find(item.components());
-            });
-            find(this.components());
-            return result;
-        },
-        closest(query) {
-            const result = this.view.$el.closest(query);
-            return result.length && result.data('model');
-        },
-        tagUpdated() {
-            const coll = this.collection;
-            const at = coll.indexOf(this);
-            coll.remove(this);
-            coll.add(this, { at });
-        },
-        replaceWith(el) {
-            const coll = this.collection;
-            const at = coll.indexOf(this);
-            coll.remove(this);
-            return coll.add(el, { at });
-        },
-        attrUpdated(m, v, opts = {}) {
-            const attrs = this.get('attributes');
-            const classes = attrs.class;
-            classes && this.setClass(classes);
-            delete attrs.class;
-            const style = attrs.style;
-            style && this.setStyle(style);
-            delete attrs.style;
-            const attrPrev = { ...this.previous('attributes') };
-            const diff = b.shallowDiff(attrPrev, this.get('attributes'));
-            _.keys(diff).undefined(pr => this.trigger(`change:attributes:${ pr }`, this, diff[pr], opts));
-        },
-        setAttributes(attrs, opts = {}) {
-            this.set('attributes', { ...attrs }, opts);
-            return this;
-        },
-        addAttributes(attrs) {
-            const newAttrs = {
-                ...this.getAttributes(),
-                ...attrs
+        toggleSelectComponent(enable) {
+            const {em} = this;
+            const method = enable ? 'on' : 'off';
+
+            const trigger = (win, body) => {
+                mixins[method](body, 'mouseover', this.onHover);
+                mixins[method](body, 'mouseleave', this.onOut);
+                mixins[method](body, 'click touchend', this.onClick);
+                mixins[method](win, 'scroll', this.onFrameScroll);
             };
-            this.setAttributes(newAttrs);
-            return this;
+            mixins[method](window, 'resize', this.onFrameUpdated);
+            em[method]('component:toggled', this.onSelect, this);
+            em[method]('change:componentHovered', this.onHovered, this);
+            em[method]('component:resize component:styleUpdate', this.updateGlobalPos, this);
+            em[method]('change:canvasOffset', this.updateAttached, this);
+            em[method]('frame:updated', this.onFrameUpdated, this);
+            em.get('Canvas').getFrames().forEach(frame => {
+                const {view} = frame;
+                trigger(view.getWindow(), view.getBody());
+            });
         },
-        getStyle() {
-            const em = this.em;
-            if (em && em.getConfig('avoidInlineStyle')) {
-                const state = em.get('state');
-                const cc = em.get('CssComposer');
-                const rule = cc.getIdRule(this.getId(), { state });
-                this.rule = rule;
-                if (rule) {
-                    return rule.getStyle();
+        onHover(e) {
+            e.stopPropagation();
+            const trg = e.target;
+            const view = mixins.getViewEl(trg);
+            const frameView = view && view._getFrame();
+            const $el = $(trg);
+            let model = $el.data('model');
+            if (!model) {
+                let parent = $el.parent();
+                while (!model && parent.length > 0) {
+                    model = parent.data('model');
+                    parent = parent.parent();
                 }
             }
-            return Styleable.getStyle.call(this);
+            if (model && !model.get('hoverable')) {
+                let parent = model && model.parent();
+                while (parent && !parent.get('hoverable'))
+                    parent = parent.parent();
+                model = parent;
+            }
+            this.currentDoc = trg.ownerDocument;
+            this.em.setHovered(model);
+            frameView && this.em.set('currentFrame', frameView);
         },
-        setStyle(prop = {}, opts = {}) {
-            const em = this.em;
-            const {opt} = this;
-            if (em && em.getConfig('avoidInlineStyle') && !opt.temporary) {
-                const style = this.get('style') || {};
-                prop = _.isString(prop) ? this.parseStyle(prop) : prop;
-                prop = {
-                    ...prop,
-                    ...style
+        onFrameUpdated() {
+            this.updateLocalPos();
+            this.updateGlobalPos();
+        },
+        onHovered(em, component) {
+            let result = {};
+            if (component) {
+                component.views.forEach(view => {
+                    const el = view.el;
+                    const pos = this.getElementPos(el);
+                    result = {
+                        el,
+                        pos,
+                        component,
+                        view: mixins.getViewEl(el)
+                    };
+                    this.updateToolsLocal(result);
+                    if (el.ownerDocument === this.currentDoc)
+                        this.elHovered = result;
+                });
+            }
+        },
+        onSelect: a.debounce(function () {
+            const {em} = this;
+            const component = em.getSelected();
+            const currentFrame = em.get('currentFrame') || {};
+            const view = component && component.getView(currentFrame.model);
+            let el = view && view.el;
+            let result = {};
+            if (el) {
+                const pos = this.getElementPos(el);
+                result = {
+                    el,
+                    pos,
+                    component,
+                    view: mixins.getViewEl(el)
                 };
-                const state = em.get('state');
-                const cc = em.get('CssComposer');
-                const propOrig = this.getStyle();
-                this.rule = cc.setIdRule(this.getId(), prop, {
-                    ...opts,
-                    state
+            }
+            this.elSelected = result;
+            this.updateToolsGlobal();
+            this.updateToolsLocal(result);
+        }),
+        updateGlobalPos() {
+            const sel = this.getElSelected();
+            if (!sel.el)
+                return;
+            sel.pos = this.getElementPos(sel.el);
+            this.updateToolsGlobal();
+        },
+        updateLocalPos() {
+            const sel = this.getElHovered();
+            if (!sel.el)
+                return;
+            sel.pos = this.getElementPos(sel.el);
+            this.updateToolsLocal();
+        },
+        getElHovered() {
+            return this.elHovered || {};
+        },
+        getElSelected() {
+            return this.elSelected || {};
+        },
+        onOut() {
+            this.currentDoc = null;
+            this.em.setHovered(0);
+            this.canvas.getFrames().forEach(frame => {
+                const el = frame.view.getToolsEl();
+                this.toggleToolsEl(0, 0, { el });
+            });
+        },
+        toggleToolsEl(on, view, opts = {}) {
+            const el = opts.el || this.canvas.getToolsEl(view);
+            el.style.opacity = on ? 1 : 0;
+            return el;
+        },
+        showElementOffset(el, pos, opts = {}) {
+            if (!showOffsets)
+                return;
+            this.editor.runCommand('show-offset', {
+                el,
+                elPos: pos,
+                view: opts.view,
+                force: 1,
+                top: 0,
+                left: 0
+            });
+        },
+        hideElementOffset(view) {
+            this.editor.stopCommand('show-offset', { view });
+        },
+        showFixedElementOffset(el, pos) {
+            this.editor.runCommand('show-offset', {
+                el,
+                elPos: pos,
+                state: 'Fixed'
+            });
+        },
+        hideFixedElementOffset(el, pos) {
+            if (this.editor)
+                this.editor.stopCommand('show-offset', { state: 'Fixed' });
+        },
+        hideHighlighter(view) {
+            this.canvas.getHighlighter(view).style.opacity = 0;
+        },
+        onClick(ev) {
+            ev.stopPropagation();
+            ev.preventDefault();
+            const {em} = this;
+            if (em.get('_cmpDrag'))
+                return em.set('_cmpDrag');
+            const $el = $(ev.target);
+            let model = $el.data('model');
+            if (!model) {
+                let parent = $el.parent();
+                while (!model && parent.length > 0) {
+                    model = parent.data('model');
+                    parent = parent.parent();
+                }
+            }
+            if (model) {
+                if (model.get('selectable')) {
+                    this.select(model, ev);
+                } else {
+                    let parent = model.parent();
+                    while (parent && !parent.get('selectable'))
+                        parent = parent.parent();
+                    this.select(parent, ev);
+                }
+            }
+        },
+        select(model, event = {}) {
+            if (!model)
+                return;
+            const ctrlKey = event.ctrlKey || event.metaKey;
+            const {shiftKey} = event;
+            const {editor, em} = this;
+            const multiple = editor.getConfig('multipleSelection');
+            if (ctrlKey && multiple) {
+                editor.selectToggle(model);
+            } else if (shiftKey && multiple) {
+                em.clearSelection(editor.Canvas.getWindow());
+                const coll = model.collection;
+                const index = coll.indexOf(model);
+                const selAll = editor.getSelectedAll();
+                let min, max;
+                editor.getSelectedAll().forEach(sel => {
+                    const selColl = sel.collection;
+                    const selIndex = selColl.indexOf(sel);
+                    if (selColl === coll) {
+                        if (selIndex < index) {
+                            min = a.isUndefined(min) ? selIndex : Math.max(min, selIndex);
+                        } else if (selIndex > index) {
+                            max = a.isUndefined(max) ? selIndex : Math.min(max, selIndex);
+                        }
+                    }
                 });
-                const diff = b.shallowDiff(propOrig, prop);
-                this.set('style', {}, { silent: 1 });
-                _.keys(diff).undefined(pr => this.trigger(`change:style:${ pr }`));
+                if (!a.isUndefined(min)) {
+                    while (min !== index) {
+                        editor.selectAdd(coll.at(min));
+                        min++;
+                    }
+                }
+                if (!a.isUndefined(max)) {
+                    while (max !== index) {
+                        editor.selectAdd(coll.at(max));
+                        max--;
+                    }
+                }
+                editor.selectAdd(model);
             } else {
-                prop = Styleable.setStyle.apply(this, arguments);
+                editor.select(model, { scroll: {} });
             }
-            return prop;
+            this.initResize(model);
         },
-        getAttributes() {
-            const {em} = this;
-            const classes = [];
-            const attributes = { ...this.get('attributes') };
-            const sm = em && em.get('SelectorManager');
-            const id = this.getId();
-            this.get('classes').undefined(cls => classes.push(_.isString(cls) ? cls : cls.get('name')));
-            classes.length && (attributes.class = classes.join(' '));
-            if (!_.has(attributes, 'id')) {
-                let hasStyle;
-                if (avoidInline(em)) {
-                    hasStyle = sm && sm.get(id, sm.Selector.TYPE_ID);
-                } else if (!_.isEmpty(this.getStyle())) {
-                    hasStyle = 1;
-                }
-                if (hasStyle) {
-                    attributes.id = this.getId();
-                }
+        updateBadge(el, pos, opts = {}) {
+            const model = $(el).data('model');
+            if (!model || !model.get('badgable'))
+                return;
+            const badge = this.getBadge(opts);
+            if (!opts.posOnly) {
+                const config = this.canvas.getConfig();
+                const icon = model.getIcon();
+                const ppfx = config.pStylePrefix || '';
+                const clsBadge = `${ ppfx }badge`;
+                const customeLabel = config.customBadgeLabel;
+                const badgeLabel = `${ icon ? `<div class="${ clsBadge }__icon">${ icon }</div>` : '' }
+        <div class="${ clsBadge }__name">${ model.getName() }</div>`;
+                badge.innerHTML = customeLabel ? customeLabel(model) : badgeLabel;
             }
-            return attributes;
+            const un = 'px';
+            const bStyle = badge.style;
+            bStyle.display = 'block';
+            const badgeH = badge ? badge.offsetHeight : 0;
+            const posTop = 0 - badgeH;
+            const top = opts.topOff - badgeH < 0 ? -opts.topOff : posTop;
+            const left = opts.leftOff < 0 ? -opts.leftOff : 0;
+            bStyle.top = top + un;
+            bStyle.left = left + un;
         },
-        addClass(classes) {
-            const added = this.em.get('SelectorManager').addClass(classes);
-            return this.get('classes').add(added);
+        showHighlighter(view) {
+            this.canvas.getHighlighter(view).style.opacity = '';
         },
-        setClass(classes) {
-            this.get('classes').reset();
-            return this.addClass(classes);
-        },
-        removeClass(classes) {
-            const removed = [];
-            classes = _.isArray(classes) ? classes : [classes];
-            const selectors = this.get('classes');
-            const type = Selector.TYPE_CLASS;
-            classes.undefined(classe => {
-                const classes = classe.split(' ');
-                classes.undefined(name => {
-                    const selector = selectors.where({
-                        name,
-                        type
-                    })[0];
-                    selector && removed.push(selectors.remove(selector));
+        initResize(elem) {
+            const {em, canvas} = this;
+            const editor = em ? em.get('Editor') : '';
+            const config = em ? em.get('Config') : '';
+            const pfx = config.stylePrefix || '';
+            const resizeClass = `${ pfx }resizing`;
+            const model = !a.isElement(elem) && mixins.isTaggableNode(elem) ? elem : em.getSelected();
+            const resizable = model.get('resizable');
+            const el = a.isElement(elem) ? elem : model.getEl();
+            let options = {};
+            let modelToStyle;
+            var toggleBodyClass = (method, e, opts) => {
+                const docs = opts.docs;
+                docs && docs.forEach(doc => {
+                    const body = doc.body;
+                    const cls = body.className || '';
+                    body.className = (method == 'add' ? `${ cls } ${ resizeClass }` : cls.replace(resizeClass, '')).trim();
                 });
-            });
-            return removed;
-        },
-        getClasses() {
-            const attr = this.getAttributes();
-            const classStr = attr.class;
-            return classStr ? classStr.split(' ') : [];
-        },
-        initClasses() {
-            const event = 'change:classes';
-            const toListen = [
-                this,
-                event,
-                this.initClasses
-            ];
-            const cls = this.get('classes') || [];
-            const clsArr = _.isString(cls) ? cls.split(' ') : cls;
-            this.stopListening(...toListen);
-            const classes = this.normalizeClasses(clsArr);
-            const selectors = new Selectors([]);
-            this.set('classes', selectors);
-            selectors.add(classes);
-            this.listenTo(...toListen);
-            return this;
-        },
-        initComponents() {
-            const event = 'change:components';
-            const toListen = [
-                this,
-                event,
-                this.initComponents
-            ];
-            this.stopListening(...toListen);
-            const comps = new Components(null, this.opt);
-            comps.parent = this;
-            const components = this.get('components');
-            const addChild = !this.opt.avoidChildren;
-            this.set('components', comps);
-            addChild && comps.add(_.isFunction(components) ? components(this) : components);
-            this.listenTo(...toListen);
-            return this;
-        },
-        initTraits(changed) {
-            const {em} = this;
-            const event = 'change:traits';
-            const toListen = [
-                this,
-                event,
-                this.initTraits
-            ];
-            this.stopListening(...toListen);
-            this.loadTraits();
-            const attrs = { ...this.get('attributes') };
-            const traits = this.get('traits');
-            traits.each(trait => {
-                if (!trait.get('changeProp')) {
-                    const name = trait.get('name');
-                    const value = trait.getInitValue();
-                    if (name && value)
-                        attrs[name] = value;
+            };
+            if (editor && resizable) {
+                options = {
+                    onStart(e, opts = {}) {
+                        const {el, config, resizer} = opts;
+                        const {keyHeight, keyWidth, currentUnit, keepAutoHeight, keepAutoWidth} = config;
+                        toggleBodyClass('add', e, opts);
+                        modelToStyle = em.get('StyleManager').getModelToStyle(model);
+                        canvas.toggleFramesEvents();
+                        const computedStyle = getComputedStyle(el);
+                        const modelStyle = modelToStyle.getStyle();
+                        let currentWidth = modelStyle[keyWidth];
+                        config.autoWidth = keepAutoWidth && currentWidth === 'auto';
+                        if (isNaN(parseFloat(currentWidth))) {
+                            currentWidth = computedStyle[keyWidth];
+                        }
+                        let currentHeight = modelStyle[keyHeight];
+                        config.autoHeight = keepAutoHeight && currentHeight === 'auto';
+                        if (isNaN(parseFloat(currentHeight))) {
+                            currentHeight = computedStyle[keyHeight];
+                        }
+                        resizer.startDim.w = parseFloat(currentWidth);
+                        resizer.startDim.h = parseFloat(currentHeight);
+                        showOffsets = 0;
+                        if (currentUnit) {
+                            config.unitHeight = mixins.getUnitFromValue(currentHeight);
+                            config.unitWidth = mixins.getUnitFromValue(currentWidth);
+                        }
+                    },
+                    onMove() {
+                        editor.trigger('component:resize');
+                    },
+                    onEnd(e, opts) {
+                        toggleBodyClass('remove', e, opts);
+                        editor.trigger('component:resize');
+                        canvas.toggleFramesEvents(1);
+                        showOffsets = 1;
+                    },
+                    updateTarget(el, rect, options = {}) {
+                        if (!modelToStyle) {
+                            return;
+                        }
+                        const {store, selectedHandler, config} = options;
+                        const {keyHeight, keyWidth, autoHeight, autoWidth, unitWidth, unitHeight} = config;
+                        const onlyHeight = [
+                            'tc',
+                            'bc'
+                        ].indexOf(selectedHandler) >= 0;
+                        const onlyWidth = [
+                            'cl',
+                            'cr'
+                        ].indexOf(selectedHandler) >= 0;
+                        const style = {};
+                        const en = !store ? 1 : '';
+                        if (!onlyHeight) {
+                            const bodyw = canvas.getBody().offsetWidth;
+                            const width = rect.w < bodyw ? rect.w : bodyw;
+                            style[keyWidth] = autoWidth ? 'auto' : `${ width }${ unitWidth }`;
+                        }
+                        if (!onlyWidth) {
+                            style[keyHeight] = autoHeight ? 'auto' : `${ rect.h }${ unitHeight }`;
+                        }
+                        modelToStyle.addStyle({
+                            ...style,
+                            en
+                        }, { avoidStore: !store });
+                        const updateEvent = `update:component:style`;
+                        const eventToListen = `${ updateEvent }:${ keyHeight } ${ updateEvent }:${ keyWidth }`;
+                        em && em.trigger(eventToListen, null, null, { noEmit: 1 });
+                    }
+                };
+                if (typeof resizable == 'object') {
+                    options = {
+                        ...options,
+                        ...resizable
+                    };
                 }
-            });
-            traits.length && this.set('attributes', attrs);
-            this.listenTo(...toListen);
-            changed && em && em.trigger('component:toggled');
-            return this;
-        },
-        append(components, opts = {}) {
-            const result = this.components().add(components, opts);
-            return _.isArray(result) ? result : [result];
-        },
-        components(components) {
-            const coll = this.get('components');
-            if (_.isUndefined(components)) {
-                return coll;
+                this.resizer = editor.runCommand('resize', {
+                    el,
+                    options,
+                    force: 1
+                });
             } else {
-                coll.reset();
-                return components && this.append(components);
+                editor.stopCommand('resize');
+                this.resizer = null;
             }
         },
-        parent() {
-            const coll = this.collection;
-            return coll && coll.parent;
-        },
-        scriptUpdated() {
-            this.set('scriptUpdated', 1);
-        },
-        initToolbar() {
-            const {em} = this;
-            const model = this;
-            const ppfx = em && em.getConfig('stylePrefix') || '';
-            if (!model.get('toolbar')) {
-                var tb = [];
-                if (model.collection) {
-                    tb.push({
-                        attributes: { class: 'fa fa-arrow-up' },
-                        command: ed => ed.runCommand('core:component-exit', { force: 1 })
-                    });
-                }
-                if (model.get('draggable')) {
-                    tb.push({
-                        attributes: {
-                            class: `fa fa-arrows ${ ppfx }no-touch-actions`,
-                            draggable: true
-                        },
-                        command: 'tlb-move'
-                    });
-                }
-                if (model.get('copyable')) {
-                    tb.push({
-                        attributes: { class: 'fa fa-clone' },
-                        command: 'tlb-clone'
-                    });
-                }
-                if (model.get('removable')) {
-                    tb.push({
-                        attributes: { class: 'fa fa-trash-o' },
-                        command: 'tlb-delete'
-                    });
-                }
-                model.set('toolbar', tb);
-            }
-        },
-        loadTraits(traits, opts = {}) {
-            traits = traits || this.get('traits');
-            traits = _.isFunction(traits) ? traits(this) : traits;
-            if (!(traits instanceof Traits)) {
-                const trt = new Traits([], this.opt);
-                trt.setTarget(this);
-                if (traits.length) {
-                    traits.undefined(tr => tr.attributes && delete tr.attributes.value);
-                    trt.add(traits);
-                }
-                this.set('traits', trt, opts);
-            }
-            return this;
-        },
-        getTrait(id) {
-            return this.get('traits').filter(trait => {
-                return trait.get('id') === id || trait.get('name') === id;
-            })[0];
-        },
-        updateTrait(id, props) {
-            const {em} = this;
-            const trait = this.getTrait(id);
-            trait && trait.set(props);
-            em && em.trigger('component:toggled');
-            return this;
-        },
-        getTraitIndex(id) {
-            const trait = this.getTrait(id);
-            return trait ? this.get('traits').indexOf(trait) : trait;
-        },
-        removeTrait(id) {
-            const {em} = this;
-            const ids = _.isArray(id) ? id : [id];
-            const toRemove = ids.map(id => this.getTrait(id));
-            const removed = this.get('traits').remove(toRemove);
-            em && em.trigger('component:toggled');
-            return removed;
-        },
-        addTrait(trait, opts = {}) {
-            const {em} = this;
-            const added = this.get('traits').add(trait, opts);
-            em && em.trigger('component:toggled');
-            return added;
-        },
-        normalizeClasses(arr) {
-            var res = [];
-            const em = this.em;
-            if (!em)
+        updateToolbar(mod) {
+            var em = this.config.em;
+            var model = mod == em ? em.getSelected() : mod;
+            var toolbarEl = this.canvas.getToolbarEl();
+            var toolbarStyle = toolbarEl.style;
+            if (!model) {
+                toolbarStyle.opacity = 0;
                 return;
-            var clm = em.get('SelectorManager');
-            if (!clm)
-                return;
-            arr.undefined(val => {
-                var name = '';
-                if (typeof val === 'string')
-                    name = val;
-                else
-                    name = val.name;
-                var model = clm.add(name);
-                res.push(model);
-            });
-            return res;
-        },
-        clone() {
-            const em = this.em;
-            const style = this.getStyle();
-            const attr = { ...this.attributes };
-            const opts = { ...this.opt };
-            attr.attributes = { ...attr.attributes };
-            delete attr.attributes.id;
-            attr.components = [];
-            attr.classes = [];
-            attr.traits = [];
-            this.get('components').each((md, i) => {
-                attr.components[i] = md.clone();
-            });
-            this.get('traits').each((md, i) => {
-                attr.traits[i] = md.clone();
-            });
-            this.get('classes').each((md, i) => {
-                attr.classes[i] = md.get('name');
-            });
-            attr.status = '';
-            attr.view = '';
-            opts.collection = null;
-            if (em && em.getConfig('avoidInlineStyle') && !_.isEmpty(style)) {
-                attr.style = style;
             }
-            const cloned = new this.constructor(attr, opts);
-            const event = 'component:clone';
-            em && em.trigger(event, cloned);
-            this.trigger(event, cloned);
-            return cloned;
-        },
-        getName() {
-            const {em} = this;
-            const {type, tagName} = this.attributes;
-            const cName = this.get('name');
-            const isDiv = tagName == 'div';
-            const tag = isDiv ? 'box' : tagName;
-            const defName = type || tag;
-            const nameTag = !type && tagName && !isDiv && tagName;
-            const i18nPfx = 'domComponents.names.';
-            const i18nName = cName && em && em.t(`${ i18nPfx }${ cName }`);
-            const i18nNameTag = nameTag && em && em.t(`${ i18nPfx }${ nameTag }`);
-            const i18nDefName = em && (em.t(`${ i18nPfx }${ type }`) || em.t(`${ i18nPfx }${ tagName }`));
-            return this.get('custom-name') || i18nName || cName || i18nNameTag || b.capitalize(nameTag) || i18nDefName || b.capitalize(defName);
-        },
-        getIcon() {
-            let icon = this.get('icon');
-            return icon ? icon + ' ' : '';
-        },
-        toHTML(opts = {}) {
-            const model = this;
-            const attrs = [];
-            const customTag = opts.tag;
-            const tag = customTag || model.get('tagName');
-            const sTag = model.get('void');
-            const customAttr = opts.attributes;
-            let attributes = this.getAttrToHTML();
-            delete opts.tag;
-            if (customAttr) {
-                if (_.isFunction(customAttr)) {
-                    attributes = customAttr(model, attributes) || {};
-                } else if (_.isObject(customAttr)) {
-                    attributes = customAttr;
+            var toolbar = model.get('toolbar');
+            var showToolbar = em.get('Config').showToolbar;
+            if (showToolbar && toolbar && toolbar.length) {
+                toolbarStyle.opacity = '';
+                toolbarStyle.display = '';
+                if (!this.toolbar) {
+                    toolbarEl.innerHTML = '';
+                    this.toolbar = new Toolbar(toolbar);
+                    var toolbarView = new ToolbarView({
+                        collection: this.toolbar,
+                        editor: this.editor,
+                        em
+                    });
+                    toolbarEl.appendChild(toolbarView.render().el);
                 }
+                this.toolbar.reset(toolbar);
+                toolbarStyle.top = '-100px';
+                toolbarStyle.left = 0;
+            } else {
+                toolbarStyle.display = 'none';
             }
-            for (let attr in attributes) {
-                const val = attributes[attr];
-                const value = _.isString(val) ? val.replace(/"/g, '&quot;') : val;
-                if (!_.isUndefined(value)) {
-                    if (_.isBoolean(value)) {
-                        value && attrs.push(attr);
-                    } else {
-                        attrs.push(`${ attr }="${ value }"`);
-                    }
-                }
-            }
-            let attrString = attrs.length ? ` ${ attrs.join(' ') }` : '';
-            let code = `<${ tag }${ attrString }${ sTag ? '/' : '' }>${ model.get('content') }`;
-            model.get('components').each(comp => code += comp.toHTML(opts));
-            !sTag && (code += `</${ tag }>`);
-            return code;
         },
-        getAttrToHTML() {
-            var attr = this.getAttributes();
-            delete attr.style;
-            return attr;
+        updateToolbarPos(pos) {
+            const unit = 'px';
+            const {style} = this.canvas.getToolbarEl();
+            style.top = `${ pos.top }${ unit }`;
+            style.left = `${ pos.left }${ unit }`;
+            style.opacity = '';
         },
-        toJSON(...args) {
-            const obj = Backbone.Model.prototype.toJSON.apply(this, args);
-            obj.attributes = this.getAttributes();
-            delete obj.attributes.class;
-            delete obj.toolbar;
-            delete obj.traits;
-            if (this.em.getConfig('avoidDefaults')) {
-                const defaults = _.result(this, 'defaults');
-                _.forEach(defaults, (value, key) => {
-                    if ([
-                            'type',
-                            'content'
-                        ].indexOf(key) === -1 && obj[key] === value) {
-                        delete obj[key];
-                    }
-                });
-                if (_.isEmpty(obj.type)) {
-                    delete obj.type;
-                }
-                _.forEach([
-                    'attributes',
-                    'style'
-                ], prop => {
-                    if (_.isEmpty(defaults[prop]) && _.isEmpty(obj[prop])) {
-                        delete obj[prop];
-                    }
-                });
-                _.forEach([
-                    'classes',
-                    'components'
-                ], prop => {
-                    if (_.isEmpty(defaults[prop]) && !obj[prop].length) {
-                        delete obj[prop];
-                    }
-                });
-            }
-            return obj;
+        getCanvasPosition() {
+            return this.canvas.getCanvasView().getPosition();
         },
-        getId() {
-            let attrs = this.get('attributes') || {};
-            return attrs.id || this.ccid || this.cid;
+        getBadge(opts = {}) {
+            return this.canvas.getBadgeEl(opts.view);
         },
-        setId(id, opts) {
-            const attrs = { ...this.get('attributes') };
-            attrs.id = id;
-            this.set('attributes', attrs, opts);
-            return this;
+        onFrameScroll() {
+            this.updateTools();
         },
-        getEl(frame) {
-            const view = this.getView(frame);
-            return view && view.el;
+        updateTools() {
+            this.updateToolsLocal();
+            this.updateGlobalPos();
         },
-        getView(frame) {
-            let {view, views} = this;
-            if (frame) {
-                view = views.filter(view => view._getFrame() === frame.view)[0];
-            }
-            return view;
+        isCompSelected(comp) {
+            return comp && comp.get('status') === 'selected';
         },
-        getCurrentView() {
-            const frame = (this.em.get('currentFrame') || {}).model;
-            return this.getView(frame);
-        },
-        getScriptString(script) {
-            var scr = script || this.get('script');
-            if (!scr) {
-                return scr;
-            }
-            if (typeof scr == 'function') {
-                var scrStr = scr.toString().trim();
-                scrStr = scrStr.replace(/^function[\s\w]*\(\)\s?\{/, '').replace(/\}$/, '');
-                scr = scrStr.trim();
-            }
-            var config = this.em.getConfig();
-            var tagVarStart = escapeRegExp(config.tagVarStart || '{[ ');
-            var tagVarEnd = escapeRegExp(config.tagVarEnd || ' ]}');
-            var reg = new RegExp(`${ tagVarStart }([\\w\\d-]*)${ tagVarEnd }`, 'g');
-            scr = scr.replace(reg, (match, v) => {
-                this.scriptUpdated();
-                const result = this.attributes[v] || '';
-                return _.isArray(result) || typeof result == 'object' ? JSON.stringify(result) : result;
-            });
-            return scr;
-        },
-        emitUpdate(property, ...args) {
-            const em = this.em;
-            const event = 'component:update' + (property ? `:${ property }` : '');
-            property && this.updated(property, property && this.get(property), property && this.previous(property), ...args);
-            this.trigger(event, ...args);
-            em && em.trigger(event, this, ...args);
-        },
-        onAll(clb) {
-            if (_.isFunction(clb)) {
-                clb(this);
-                this.components().undefined(model => model.onAll(clb));
-            }
-            return this;
-        },
-        remove() {
-            const coll = this.collection;
-            return coll && coll.remove(this);
-        },
-        resetId(opts = {}) {
-            const {em} = this;
-            const oldId = this.getId();
-            if (!oldId)
+        updateToolsLocal(data) {
+            const {el, pos, view, component} = data || this.getElHovered();
+            if (!el) {
+                this.lastHovered = 0;
                 return;
-            const newId = Component.createId(this);
-            this.setId(newId);
-            const rule = em && em.get('CssComposer').getIdRule(oldId);
-            const selector = rule && rule.get('selectors').at(0);
-            selector && selector.set('name', newId);
-            return this;
-        },
-        _getStyleRule({id} = {}) {
-            const {em} = this;
-            const idS = id || this.getId();
-            return em && em.get('CssComposer').getIdRule(idS);
-        },
-        _getStyleSelector(opts) {
-            const rule = this._getStyleRule(opts);
-            return rule && rule.get('selectors').at(0);
-        },
-        _idUpdated(m, v, opts = {}) {
-            if (opts.idUpdate)
-                return;
-            const {ccid} = this;
-            const {id} = this.get('attributes') || {};
-            const idPrev = (this.previous('attributes') || {}).id || ccid;
-            const list = Component.getList(this);
-            if (list[id]) {
-                return this.setId(idPrev, { idUpdate: 1 });
             }
-            delete list[idPrev];
-            list[id] = this;
-            this.ccid = id;
-            const selector = this._getStyleSelector({ id: idPrev });
-            selector && selector.set({
-                name: id,
-                label: id
+            const isHoverEn = component.get('hoverable');
+            const isNewEl = this.lastHovered !== el;
+            const badgeOpts = isNewEl ? {} : { posOnly: 1 };
+            if (isNewEl && isHoverEn) {
+                this.lastHovered = el;
+                this.showHighlighter(view);
+                this.showElementOffset(el, pos, { view });
+            }
+            if (this.isCompSelected(component)) {
+                this.hideHighlighter(view);
+                this.hideElementOffset(view);
+            }
+            const unit = 'px';
+            const {style} = this.toggleToolsEl(1, view);
+            const frameOff = this.canvas.canvasRectOffset(el, pos);
+            const topOff = frameOff.top;
+            const leftOff = frameOff.left;
+            this.updateBadge(el, pos, {
+                ...badgeOpts,
+                view,
+                topOff,
+                leftOff
             });
+            style.top = topOff + unit;
+            style.left = leftOff + unit;
+            style.width = pos.width + unit;
+            style.height = pos.height + unit;
+        },
+        updateToolsGlobal() {
+            const {el, pos, component} = this.getElSelected();
+            if (!el) {
+                this.toggleToolsEl();
+                this.lastSelected = 0;
+                return;
+            }
+            const {canvas} = this;
+            const isNewEl = this.lastSelected !== el;
+            if (isNewEl) {
+                this.lastSelected = el;
+                this.updateToolbar(component);
+            }
+            const unit = 'px';
+            const {style} = this.toggleToolsEl(1);
+            const targetToElem = canvas.getTargetToElementFixed(el, canvas.getToolbarEl(), { pos });
+            const topOff = targetToElem.canvasOffsetTop;
+            const leftOff = targetToElem.canvasOffsetLeft;
+            style.top = topOff + unit;
+            style.left = leftOff + unit;
+            style.width = pos.width + unit;
+            style.height = pos.height + unit;
+            this.updateToolbarPos({
+                top: targetToElem.top,
+                left: targetToElem.left
+            });
+        },
+        updateAttached: a.debounce(function () {
+            this.updateToolsGlobal();
+        }),
+        getElementPos(el) {
+            return this.canvas.getCanvasView().getElementPos(el);
+        },
+        hideBadge() {
+            this.getBadge().style.display = 'none';
+        },
+        cleanPrevious(model) {
+            model && model.set({
+                status: '',
+                state: ''
+            });
+        },
+        getContentWindow() {
+            return this.canvas.getWindow();
+        },
+        run(editor) {
+            this.editor = editor && editor.get('Editor');
+            this.enable();
+        },
+        stop(ed, sender, opts = {}) {
+            const {em, editor} = this;
+            this.stopSelectComponent();
+            !opts.preserveSelected && em.setSelected(null);
+            this.onOut();
+            this.toggleToolsEl();
+            editor && editor.stopCommand('resize');
         }
-    }, {
-        isComponent(el) {
-            return { tagName: el.tagName ? el.tagName.toLowerCase() : '' };
+    };
+});
+define('skylark-grapejs/commands/view/DeleteComponent',[
+    'skylark-underscore',
+    'skylark-backbone',
+    './SelectComponent'
+], function (a, Backbone, SelectComponent) {
+    'use strict';
+    const $ = Backbone.$;
+    return a.extend({}, SelectComponent, {
+        init(o) {
+            a.bindAll(this, 'startDelete', 'stopDelete', 'onDelete');
+            this.hoverClass = this.pfx + 'hover-delete';
+            this.badgeClass = this.pfx + 'badge-red';
         },
-        createId(model) {
-            const list = Component.getList(model);
-            let {id} = model.get('attributes');
-            let nextId;
-            if (id) {
-                nextId = Component.getIncrementId(id, list);
-                model.setId(nextId);
-            } else {
-                nextId = Component.getNewId(list);
+        enable() {
+            var that = this;
+            this.$el.find('*').mouseover(this.startDelete).mouseout(this.stopDelete).click(this.onDelete);
+        },
+        startDelete(e) {
+            e.stopPropagation();
+            var $this = $(e.target);
+            if ($this.data('model').get('removable')) {
+                $this.addClass(this.hoverClass);
+                this.attachBadge($this.get(0));
             }
-            list[nextId] = model;
-            return nextId;
         },
-        getNewId(list) {
-            const count = Object.undefined(list).length;
-            const ilen = count.toString().length + 2;
-            const uid = (Math.random() + 1.1).toString(36).slice(-ilen);
-            let newId = `i${ uid }`;
-            while (list[newId]) {
-                newId = Component.getNewId(list);
-            }
-            return newId;
+        stopDelete(e) {
+            e.stopPropagation();
+            var $this = $(e.target);
+            $this.removeClass(this.hoverClass);
+            if (this.badge)
+                this.badge.css({
+                    left: -1000,
+                    top: -1000
+                });
         },
-        getIncrementId(id, list) {
-            let counter = 1;
-            let newId = id;
-            while (list[newId]) {
-                counter++;
-                newId = `${ id }-${ counter }`;
-            }
-            return newId;
+        onDelete(e) {
+            e.stopPropagation();
+            var $this = $(e.target);
+            if (!$this.data('model').get('removable'))
+                return;
+            $this.data('model').destroy();
+            this.removeBadge();
+            this.clean();
         },
-        getList(model) {
-            const domc = model.opt && model.opt.domc;
-            return domc ? domc.componentsById : {};
-        },
-        checkId(components, styles = [], list = {}) {
-            const comps = _.isArray(components) ? components : [components];
-            comps.undefined(comp => {
-                const {attributes = {}, components} = comp;
-                const {id} = attributes;
-                if (id && list[id]) {
-                    const newId = Component.getIncrementId(id, list);
-                    attributes.id = newId;
-                    _.isArray(styles) && styles.undefined(style => {
-                        const {selectors} = style;
-                        selectors.undefined((sel, idx) => {
-                            if (sel === `#${ id }`)
-                                selectors[idx] = `#${ newId }`;
-                        });
-                    });
-                }
-                components && Component.checkId(components, styles, list);
-            });
+        updateBadgeLabel(model) {
+            this.badge.html('Remove ' + model.getName());
         }
     });
-    
-    Component.eventDrag = eventDrag;
-    
-    return Component;
+});
+define('skylark-grapejs/commands/view/ExportTemplate',['skylark-backbone'], function (Backbone) {
+    'use strict';
+    const $ = Backbone.$;
+    return {
+        run(editor, sender, opts = {}) {
+            sender && sender.set && sender.set('active', 0);
+            const config = editor.getConfig();
+            const modal = editor.Modal;
+            const pfx = config.stylePrefix;
+            this.cm = editor.CodeManager || null;
+            if (!this.$editors) {
+                const oHtmlEd = this.buildEditor('htmlmixed', 'hopscotch', 'HTML');
+                const oCsslEd = this.buildEditor('css', 'hopscotch', 'CSS');
+                this.htmlEditor = oHtmlEd.el;
+                this.cssEditor = oCsslEd.el;
+                const $editors = $(`<div class="${ pfx }export-dl"></div>`);
+                $editors.append(oHtmlEd.$el).append(oCsslEd.$el);
+                this.$editors = $editors;
+            }
+            modal.open({
+                title: config.textViewCode,
+                content: this.$editors
+            }).getModel().once('change:open', () => editor.stopCommand(this.id));
+            this.htmlEditor.setContent(editor.getHtml());
+            this.cssEditor.setContent(editor.getCss());
+        },
+        stop(editor) {
+            const modal = editor.Modal;
+            modal && modal.close();
+        },
+        buildEditor(codeName, theme, label) {
+            const input = document.createElement('textarea');
+            !this.codeMirror && (this.codeMirror = this.cm.getViewer('CodeMirror'));
+            const el = this.codeMirror.clone().set({
+                label,
+                codeName,
+                theme,
+                input
+            });
+            const $el = new this.cm.EditorView({
+                model: el,
+                config: this.cm.getConfig()
+            }).render().$el;
+            el.init(input);
+            return {
+                el,
+                $el
+            };
+        }
+    };
+});
+define('skylark-grapejs/commands/view/Fullscreen',['skylark-underscore'], function (a) {
+    'use strict';
+    return {
+        isEnabled() {
+            var d = document;
+            if (d.fullscreenElement || d.webkitFullscreenElement || d.mozFullScreenElement)
+                return 1;
+            else
+                return 0;
+        },
+        enable(el) {
+            var pfx = '';
+            if (el.requestFullscreen)
+                el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) {
+                pfx = 'webkit';
+                el.webkitRequestFullscreen();
+            } else if (el.mozRequestFullScreen) {
+                pfx = 'moz';
+                el.mozRequestFullScreen();
+            } else if (el.msRequestFullscreen)
+                el.msRequestFullscreen();
+            else
+                console.warn('Fullscreen not supported');
+            return pfx;
+        },
+        disable() {
+            const d = document;
+            if (this.isEnabled()) {
+                if (d.exitFullscreen)
+                    d.exitFullscreen();
+                else if (d.webkitExitFullscreen)
+                    d.webkitExitFullscreen();
+                else if (d.mozCancelFullScreen)
+                    d.mozCancelFullScreen();
+                else if (d.msExitFullscreen)
+                    d.msExitFullscreen();
+            }
+        },
+        fsChanged(pfx, e) {
+            var d = document;
+            var ev = (pfx || '') + 'fullscreenchange';
+            if (!this.isEnabled()) {
+                this.stop(null, this.sender);
+                document.removeEventListener(ev, this.fsChanged);
+            }
+        },
+        run(editor, sender, opts = {}) {
+            this.sender = sender;
+            const {target} = opts;
+            const targetEl = a.isElement(target) ? target : document.querySelector(target);
+            const pfx = this.enable(targetEl || editor.getContainer());
+            this.fsChanged = this.fsChanged.bind(this, pfx);
+            document.addEventListener(pfx + 'fullscreenchange', this.fsChanged);
+            editor.trigger('change:canvasOffset');
+        },
+        stop(editor, sender) {
+            if (sender && sender.set)
+                sender.set('active', false);
+            this.disable();
+            if (editor)
+                editor.trigger('change:canvasOffset');
+        }
+    };
+});
+define('skylark-grapejs/commands/view/SelectPosition',['skylark-backbone'], function (Backbone) {
+    'use strict';
+    const $ = Backbone.$;
+    return {
+        startSelectPosition(trg, doc, opts = {}) {
+            this.isPointed = false;
+            var utils = this.editorModel.get('Utils');
+            const container = trg.ownerDocument.body;
+            if (utils && !this.sorter)
+                this.sorter = new utils.Sorter({
+                    container,
+                    placer: this.canvas.getPlacerEl(),
+                    containerSel: '*',
+                    itemSel: '*',
+                    pfx: this.ppfx,
+                    direction: 'a',
+                    document: doc,
+                    wmargin: 1,
+                    nested: 1,
+                    em: this.editorModel,
+                    canvasRelative: 1,
+                    scale: () => this.em.getZoomDecimal()
+                });
+            if (opts.onStart)
+                this.sorter.onStart = opts.onStart;
+            trg && this.sorter.startSort(trg, { container });
+        },
+        getOffsetDim() {
+            var frameOff = this.offset(this.canvas.getFrameEl());
+            var canvasOff = this.offset(this.canvas.getElement());
+            var top = frameOff.top - canvasOff.top;
+            var left = frameOff.left - canvasOff.left;
+            return {
+                top,
+                left
+            };
+        },
+        stopSelectPosition() {
+            this.posTargetCollection = null;
+            this.posIndex = this.posMethod == 'after' && this.cDim.length !== 0 ? this.posIndex + 1 : this.posIndex;
+            if (this.sorter) {
+                this.sorter.moved = 0;
+                this.sorter.endMove();
+            }
+            if (this.cDim) {
+                this.posIsLastEl = this.cDim.length !== 0 && this.posMethod == 'after' && this.posIndex == this.cDim.length;
+                this.posTargetEl = this.cDim.length === 0 ? $(this.outsideElem) : !this.posIsLastEl && this.cDim[this.posIndex] ? $(this.cDim[this.posIndex][5]).parent() : $(this.outsideElem);
+                this.posTargetModel = this.posTargetEl.data('model');
+                this.posTargetCollection = this.posTargetEl.data('model-comp');
+            }
+        },
+        enable() {
+            this.startSelectPosition();
+        },
+        nearFloat(index, method, dims) {
+            var i = index || 0;
+            var m = method || 'before';
+            var len = dims.length;
+            var isLast = len !== 0 && m == 'after' && i == len;
+            if (len !== 0 && (!isLast && !dims[i][4] || dims[i - 1] && !dims[i - 1][4] || isLast && !dims[i - 1][4]))
+                return 1;
+            return 0;
+        },
+        run() {
+            this.enable();
+        },
+        stop() {
+            this.stopSelectPosition();
+            this.$wrapper.css('cursor', '');
+            this.$wrapper.unbind();
+        }
+    };
+});
+define('skylark-grapejs/commands/view/MoveComponent',[
+    'skylark-underscore',
+    'skylark-backbone',
+    '../../utils/mixins',
+    './SelectComponent',
+    './SelectPosition'
+], function (a, Backbone, b, SelectComponent, SelectPosition) {
+    'use strict';
+    const $ = Backbone.$;
+    return a.extend({}, SelectPosition, SelectComponent, {
+        init(o) {
+            SelectComponent.init.apply(this, arguments);
+            a.bindAll(this, 'initSorter', 'rollback', 'onEndMove');
+            this.opt = o;
+            this.hoverClass = this.ppfx + 'highlighter-warning';
+            this.badgeClass = this.ppfx + 'badge-warning';
+            this.noSelClass = this.ppfx + 'no-select';
+        },
+        enable(...args) {
+            SelectComponent.enable.apply(this, args);
+            this.getBadgeEl().addClass(this.badgeClass);
+            this.getHighlighterEl().addClass(this.hoverClass);
+            var wp = this.$wrapper;
+            wp.css('cursor', 'move');
+            wp.on('mousedown', this.initSorter);
+            wp.addClass(this.noSelClass);
+        },
+        toggleClipboard() {
+        },
+        initSorter(e) {
+            var el = $(e.target).data('model');
+            var drag = el.get('draggable');
+            if (!drag)
+                return;
+            this.cacheEl = null;
+            this.startSelectPosition(e.target, this.frameEl.contentDocument);
+            this.sorter.draggable = drag;
+            this.sorter.onEndMove = this.onEndMove.bind(this);
+            this.stopSelectComponent();
+            this.$wrapper.on('mousedown', this.initSorter);
+            b.on(this.getContentWindow(), 'keydown', this.rollback);
+        },
+        initSorterFromModel(model) {
+            var drag = model.get('draggable');
+            if (!drag)
+                return;
+            this.cacheEl = null;
+            var el = model.view.el;
+            this.startSelectPosition(el, this.frameEl.contentDocument);
+            this.sorter.draggable = drag;
+            this.sorter.onEndMove = this.onEndMoveFromModel.bind(this);
+            this.stopSelectComponent();
+            b.on(this.getContentWindow(), 'keydown', this.rollback);
+        },
+        initSorterFromModels(models) {
+            this.cacheEl = null;
+            const lastModel = models[models.length - 1];
+            const frame = (this.em.get('currentFrame') || {}).model;
+            const el = lastModel.getEl(frame);
+            const doc = el.ownerDocument;
+            this.startSelectPosition(el, doc, { onStart: this.onStart });
+            this.sorter.draggable = lastModel.get('draggable');
+            this.sorter.toMove = models;
+            this.sorter.onMoveClb = this.onDrag;
+            this.sorter.onEndMove = this.onEndMoveFromModel.bind(this);
+            this.stopSelectComponent();
+            b.on(this.getContentWindow(), 'keydown', this.rollback);
+        },
+        onEndMoveFromModel() {
+            b.off(this.getContentWindow(), 'keydown', this.rollback);
+        },
+        onEndMove() {
+            this.enable();
+            b.off(this.getContentWindow(), 'keydown', this.rollback);
+        },
+        onSelect(e, el) {
+        },
+        rollback(e, force) {
+            var key = e.which || e.keyCode;
+            if (key == 27 || force) {
+                this.sorter.moved = false;
+                this.sorter.endMove();
+            }
+            return;
+        },
+        getBadgeEl() {
+            if (!this.$badge)
+                this.$badge = $(this.getBadge());
+            return this.$badge;
+        },
+        getHighlighterEl() {
+            if (!this.$hl)
+                this.$hl = $(this.canvas.getHighlighter());
+            return this.$hl;
+        },
+        stop(...args) {
+            SelectComponent.stop.apply(this, args);
+            this.getBadgeEl().removeClass(this.badgeClass);
+            this.getHighlighterEl().removeClass(this.hoverClass);
+            var wp = this.$wrapper;
+            wp.css('cursor', '').unbind().removeClass(this.noSelClass);
+        }
+    });
+});
+define('skylark-grapejs/commands/view/OpenLayers',[
+    'skylark-backbone',
+    '../../navigator/index'
+], function (Backbone, Layers) {
+    'use strict';
+    const $ = Backbone.$;
+    return {
+        run(editor) {
+            const lm = editor.LayerManager;
+            const pn = editor.Panels;
+            if (!this.layers) {
+                const id = 'views-container';
+                const layers = document.createElement('div');
+                const panels = pn.getPanel(id) || pn.addPanel({ id });
+                layers.appendChild(lm.render());
+                panels.set('appendContent', layers).trigger('change:appendContent');
+                this.layers = layers;
+            }
+            this.layers.style.display = 'block';
+        },
+        stop() {
+            const layers = this.layers;
+            layers && (layers.style.display = 'none');
+        }
+    };
+});
+define('skylark-grapejs/commands/view/OpenStyleManager',[
+    'skylark-backbone',
+    '../../style_manager/index'
+], function (Backbone, StyleManager) {
+    'use strict';
+    const $ = Backbone.$;
+    return {
+        run(em, sender) {
+            this.sender = sender;
+            if (!this.$cn) {
+                var config = em.getConfig(), panels = em.Panels;
+                this.$cn = $('<div></div>');
+                this.$cn2 = $('<div></div>');
+                this.$cn.append(this.$cn2);
+                var dvm = em.DeviceManager;
+                if (dvm && config.showDevices) {
+                    var devicePanel = panels.addPanel({ id: 'devices-c' });
+                    devicePanel.set('appendContent', dvm.render()).trigger('change:appendContent');
+                }
+                var clm = em.SelectorManager;
+                if (clm)
+                    this.$cn2.append(clm.render([]));
+                this.$cn2.append(em.StyleManager.render());
+                var smConfig = em.StyleManager.getConfig();
+                const pfx = smConfig.stylePrefix;
+                this.$header = $(`<div class="${ pfx }header">${ em.t('styleManager.empty') }</div>`);
+                this.$cn.append(this.$header);
+                if (!panels.getPanel('views-container'))
+                    this.panel = panels.addPanel({ id: 'views-container' });
+                else
+                    this.panel = panels.getPanel('views-container');
+                this.panel.set('appendContent', this.$cn).trigger('change:appendContent');
+                this.target = em.editor;
+                this.listenTo(this.target, 'component:toggled', this.toggleSm);
+            }
+            this.toggleSm();
+        },
+        toggleSm() {
+            const {target, sender} = this;
+            if (sender && sender.get && !sender.get('active'))
+                return;
+            const {componentFirst} = target.get('SelectorManager').getConfig();
+            const selectedAll = target.getSelectedAll().length;
+            if (selectedAll === 1 || selectedAll > 1 && componentFirst) {
+                this.$cn2.show();
+                this.$header.hide();
+            } else {
+                this.$cn2.hide();
+                this.$header.show();
+            }
+        },
+        stop() {
+            if (this.$cn2)
+                this.$cn2.hide();
+            if (this.$header)
+                this.$header.hide();
+        }
+    };
+});
+define('skylark-grapejs/commands/view/OpenTraitManager',['skylark-backbone'], function (Backbone) {
+    'use strict';
+    const $ = Backbone.$;
+    return {
+        run(editor, sender) {
+            this.sender = sender;
+            const em = editor.getModel();
+            var config = editor.Config;
+            var pfx = config.stylePrefix;
+            var tm = editor.TraitManager;
+            var panelC;
+            if (!this.$cn) {
+                var tmView = tm.getTraitsViewer();
+                var confTm = tm.getConfig();
+                this.$cn = $('<div></div>');
+                this.$cn2 = $('<div></div>');
+                this.$cn.append(this.$cn2);
+                this.$header = $('<div>').append(`<div class="${ confTm.stylePrefix }header">${ em.t('traitManager.empty') }</div>`);
+                this.$cn.append(this.$header);
+                this.$cn2.append(`<div class="${ pfx }traits-label">${ em.t('traitManager.label') }</div>`);
+                this.$cn2.append(tmView.render().el);
+                var panels = editor.Panels;
+                if (!panels.getPanel('views-container'))
+                    panelC = panels.addPanel({ id: 'views-container' });
+                else
+                    panelC = panels.getPanel('views-container');
+                panelC.set('appendContent', this.$cn.get(0)).trigger('change:appendContent');
+                this.target = editor.getModel();
+                this.listenTo(this.target, 'component:toggled', this.toggleTm);
+            }
+            this.toggleTm();
+        },
+        toggleTm() {
+            const sender = this.sender;
+            if (sender && sender.get && !sender.get('active'))
+                return;
+            if (this.target.getSelectedAll().length === 1) {
+                this.$cn2.show();
+                this.$header.hide();
+            } else {
+                this.$cn2.hide();
+                this.$header.show();
+            }
+        },
+        stop() {
+            this.$cn2 && this.$cn2.hide();
+            this.$header && this.$header.hide();
+        }
+    };
+});
+define('skylark-grapejs/commands/view/OpenBlocks',[],function () {
+    'use strict';
+    return {
+        run(editor, sender) {
+            const bm = editor.BlockManager;
+            const pn = editor.Panels;
+            if (!this.blocks) {
+                bm.render();
+                const id = 'views-container';
+                const blocks = document.createElement('div');
+                const panels = pn.getPanel(id) || pn.addPanel({ id });
+                blocks.appendChild(bm.getContainer());
+                panels.set('appendContent', blocks).trigger('change:appendContent');
+                this.blocks = blocks;
+            }
+            this.blocks.style.display = 'block';
+        },
+        stop() {
+            const blocks = this.blocks;
+            blocks && (blocks.style.display = 'none');
+        }
+    };
+});
+define('skylark-grapejs/commands/view/OpenAssets',[],function () {
+    'use strict';
+    return {
+        run(editor, sender, opts = {}) {
+            const modal = editor.Modal;
+            const am = editor.AssetManager;
+            const config = am.getConfig();
+            const amContainer = am.getContainer();
+            const title = opts.modalTitle || editor.t('assetManager.modalTitle') || '';
+            const types = opts.types;
+            const accept = opts.accept;
+            am.setTarget(opts.target);
+            am.onClick(opts.onClick);
+            am.onDblClick(opts.onDblClick);
+            am.onSelect(opts.onSelect);
+            if (!this.rendered || types) {
+                let assets = am.getAll().filter(i => 1);
+                if (types && types.length) {
+                    assets = assets.filter(a => types.indexOf(a.get('type')) !== -1);
+                }
+                am.render(assets);
+                this.rendered = 1;
+            }
+            if (accept) {
+                const uploadEl = amContainer.querySelector(`input#${ config.stylePrefix }uploadFile`);
+                uploadEl && uploadEl.setAttribute('accept', accept);
+            }
+            modal.open({
+                title,
+                content: amContainer
+            }).getModel().once('change:open', () => editor.stopCommand(this.id));
+            return this;
+        },
+        stop(editor) {
+            editor.Modal.close();
+            return this;
+        }
+    };
+});
+define('skylark-grapejs/commands/view/PasteComponent',['skylark-underscore'], function (a) {
+    'use strict';
+    return {
+        run(ed) {
+            const em = ed.getModel();
+            const clp = em.get('clipboard');
+            const selected = ed.getSelected();
+            if (clp && selected) {
+                ed.getSelectedAll().forEach(comp => {
+                    if (!comp)
+                        return;
+                    const coll = comp.collection;
+                    const at = coll.indexOf(comp) + 1;
+                    const copyable = clp.filter(cop => cop.get('copyable'));
+                    let added;
+                    if (a.contains(clp, comp) && comp.get('copyable')) {
+                        added = coll.add(comp.clone(), { at });
+                    } else {
+                        added = coll.add(copyable.map(cop => cop.clone()), { at });
+                    }
+                    added = a.isArray(added) ? added : [added];
+                    added.forEach(add => ed.trigger('component:paste', add));
+                });
+                selected.emitUpdate();
+            }
+        }
+    };
+});
+define('skylark-grapejs/commands/view/Preview',['skylark-underscore'], function (a) {
+    'use strict';
+    return {
+        getPanels(editor) {
+            if (!this.panels) {
+                this.panels = editor.Panels.getPanels();
+            }
+            return this.panels;
+        },
+        tglPointers(editor, val) {
+            const body = editor.Canvas.getBody();
+            const elP = body.querySelectorAll(`.${ this.ppfx }no-pointer`);
+            a.each(elP, item => item.style.pointerEvents = val ? '' : 'all');
+        },
+        run(editor, sender) {
+            this.sender = sender;
+            editor.stopCommand('sw-visibility');
+            editor.getModel().stopDefault();
+            const panels = this.getPanels(editor);
+            const canvas = editor.Canvas.getElement();
+            const editorEl = editor.getEl();
+            const pfx = editor.Config.stylePrefix;
+            if (!this.helper) {
+                const helper = document.createElement('span');
+                helper.className = `${ pfx }off-prv fa fa-eye-slash`;
+                editorEl.appendChild(helper);
+                helper.onclick = () => this.stopCommand();
+                this.helper = helper;
+            }
+            this.helper.style.display = 'inline-block';
+            this.tglPointers(editor);
+            panels.forEach(panel => panel.set('visible', false));
+            const canvasS = canvas.style;
+            canvasS.width = '100%';
+            canvasS.height = '100%';
+            canvasS.top = '0';
+            canvasS.left = '0';
+            canvasS.padding = '0';
+            canvasS.margin = '0';
+            editor.refresh();
+        },
+        stop(editor) {
+            const {
+                sender = {}
+            } = this;
+            sender.set && sender.set('active', 0);
+            const panels = this.getPanels(editor);
+            const swVisibilityButton = editor.Panels.getButton('options', 'sw-visibility');
+            if (swVisibilityButton && swVisibilityButton.get('active')) {
+                editor.runCommand('sw-visibility');
+            }
+            editor.getModel().runDefault();
+            panels.forEach(panel => panel.set('visible', true));
+            const canvas = editor.Canvas.getElement();
+            canvas.setAttribute('style', '');
+            if (this.helper) {
+                this.helper.style.display = 'none';
+            }
+            editor.refresh();
+            this.tglPointers(editor, 1);
+        }
+    };
+});
+define('skylark-grapejs/commands/view/Resize',[],function () {
+    'use strict';
+    return {
+        run(editor, sender, opts) {
+            var opt = opts || {};
+            var el = opt.el || '';
+            var canvas = editor.Canvas;
+            var canvasResizer = this.canvasResizer;
+            var options = opt.options || {};
+            var canvasView = canvas.getCanvasView();
+            options.appendTo = canvas.getResizerEl();
+            options.prefix = editor.getConfig().stylePrefix;
+            options.posFetcher = canvasView.getElementPos.bind(canvasView);
+            options.mousePosFetcher = canvas.getMouseRelativePos;
+            if (!canvasResizer || opt.forceNew) {
+                this.canvasResizer = editor.Utils.Resizer.init(options);
+                canvasResizer = this.canvasResizer;
+            }
+            canvasResizer.setOptions(options);
+            canvasResizer.blur();
+            canvasResizer.focus(el);
+            return canvasResizer;
+        },
+        stop() {
+            const resizer = this.canvasResizer;
+            resizer && resizer.blur();
+        }
+    };
+});
+define('skylark-grapejs/commands/view/ShowOffset',[
+    'skylark-backbone',
+    'skylark-underscore',
+    '../../utils/mixins'
+], function (Backbone, a, b) {
+    'use strict';
+    const $ = Backbone.$;
+    return {
+        getOffsetMethod(state) {
+            var method = state || '';
+            return 'get' + method + 'OffsetViewerEl';
+        },
+        run(editor, sender, opts) {
+            var opt = opts || {};
+            var state = opt.state || '';
+            var config = editor.getConfig();
+            const zoom = this.em.getZoomDecimal();
+            const el = opt.el || '';
+            if (!config.showOffsets || b.isTextNode(el) || !config.showOffsetsSelected && state == 'Fixed') {
+                editor.stopCommand(this.id, opts);
+                return;
+            }
+            var canvas = editor.Canvas;
+            var pos = { ...opt.elPos || canvas.getElementPos(el) };
+            if (!a.isUndefined(opt.top)) {
+                pos.top = opt.top;
+            }
+            if (!a.isUndefined(opt.left)) {
+                pos.left = opt.left;
+            }
+            var style = window.getComputedStyle(el);
+            var ppfx = this.ppfx;
+            var stateVar = state + 'State';
+            var method = this.getOffsetMethod(state);
+            var offsetViewer = canvas[method](opts.view);
+            offsetViewer.style.opacity = '';
+            let marginT = this['marginT' + state];
+            let marginB = this['marginB' + state];
+            let marginL = this['marginL' + state];
+            let marginR = this['marginR' + state];
+            let padT = this['padT' + state];
+            let padB = this['padB' + state];
+            let padL = this['padL' + state];
+            let padR = this['padR' + state];
+            if (offsetViewer.childNodes.length) {
+                this[stateVar] = '1';
+                marginT = offsetViewer.querySelector('[data-offset-m-t]');
+                marginB = offsetViewer.querySelector('[data-offset-m-b]');
+                marginL = offsetViewer.querySelector('[data-offset-m-l]');
+                marginR = offsetViewer.querySelector('[data-offset-m-r]');
+                padT = offsetViewer.querySelector('[data-offset-p-t]');
+                padB = offsetViewer.querySelector('[data-offset-p-b]');
+                padL = offsetViewer.querySelector('[data-offset-p-l]');
+                padR = offsetViewer.querySelector('[data-offset-p-r]');
+            }
+            if (!this[stateVar]) {
+                var stateLow = state.toLowerCase();
+                var marginName = stateLow + 'margin-v';
+                var paddingName = stateLow + 'padding-v';
+                var marginV = $(`<div class="${ ppfx }marginName">`).get(0);
+                var paddingV = $(`<div class="${ ppfx }paddingName">`).get(0);
+                var marginEls = ppfx + marginName + '-el';
+                var paddingEls = ppfx + paddingName + '-el';
+                const fullMargName = `${ marginEls } ${ ppfx + marginName }`;
+                const fullPadName = `${ paddingEls } ${ ppfx + paddingName }`;
+                marginT = $(`<div class="${ fullMargName }-top"></div>`).get(0);
+                marginB = $(`<div class="${ fullMargName }-bottom"></div>`).get(0);
+                marginL = $(`<div class="${ fullMargName }-left"></div>`).get(0);
+                marginR = $(`<div class="${ fullMargName }-right"></div>`).get(0);
+                padT = $(`<div class="${ fullPadName }-top"></div>`).get(0);
+                padB = $(`<div class="${ fullPadName }-bottom"></div>`).get(0);
+                padL = $(`<div class="${ fullPadName }-left"></div>`).get(0);
+                padR = $(`<div class="${ fullPadName }-right"></div>`).get(0);
+                this['marginT' + state] = marginT;
+                this['marginB' + state] = marginB;
+                this['marginL' + state] = marginL;
+                this['marginR' + state] = marginR;
+                this['padT' + state] = padT;
+                this['padB' + state] = padB;
+                this['padL' + state] = padL;
+                this['padR' + state] = padR;
+                marginV.appendChild(marginT);
+                marginV.appendChild(marginB);
+                marginV.appendChild(marginL);
+                marginV.appendChild(marginR);
+                paddingV.appendChild(padT);
+                paddingV.appendChild(padB);
+                paddingV.appendChild(padL);
+                paddingV.appendChild(padR);
+                offsetViewer.appendChild(marginV);
+                offsetViewer.appendChild(paddingV);
+                this[stateVar] = '1';
+            }
+            var unit = 'px';
+            var marginLeftSt = parseFloat(style.marginLeft.replace(unit, '')) * zoom;
+            var marginRightSt = parseFloat(style.marginRight.replace(unit, '')) * zoom;
+            var marginTopSt = parseFloat(style.marginTop.replace(unit, '')) * zoom;
+            var marginBottomSt = parseFloat(style.marginBottom.replace(unit, '')) * zoom;
+            var mtStyle = marginT.style;
+            var mbStyle = marginB.style;
+            var mlStyle = marginL.style;
+            var mrStyle = marginR.style;
+            var ptStyle = padT.style;
+            var pbStyle = padB.style;
+            var plStyle = padL.style;
+            var prStyle = padR.style;
+            var posLeft = parseFloat(pos.left);
+            var widthEl = parseFloat(style.width) * zoom + unit;
+            mtStyle.height = marginTopSt + unit;
+            mtStyle.width = widthEl;
+            mtStyle.top = pos.top - marginTopSt + unit;
+            mtStyle.left = posLeft + unit;
+            mbStyle.height = marginBottomSt + unit;
+            mbStyle.width = widthEl;
+            mbStyle.top = pos.top + pos.height + unit;
+            mbStyle.left = posLeft + unit;
+            var marginSideH = pos.height + marginTopSt + marginBottomSt + unit;
+            var marginSideT = pos.top - marginTopSt + unit;
+            mlStyle.height = marginSideH;
+            mlStyle.width = marginLeftSt + unit;
+            mlStyle.top = marginSideT;
+            mlStyle.left = posLeft - marginLeftSt + unit;
+            mrStyle.height = marginSideH;
+            mrStyle.width = marginRightSt + unit;
+            mrStyle.top = marginSideT;
+            mrStyle.left = posLeft + pos.width + unit;
+            var padTop = parseFloat(style.paddingTop) * zoom;
+            ptStyle.height = padTop + unit;
+            var padBot = parseFloat(style.paddingBottom) * zoom;
+            pbStyle.height = padBot + unit;
+            var padSideH = pos.height - padBot - padTop + unit;
+            var padSideT = pos.top + padTop + unit;
+            plStyle.height = padSideH;
+            plStyle.width = parseFloat(style.paddingLeft) * zoom + unit;
+            plStyle.top = padSideT;
+            var padRight = parseFloat(style.paddingRight) * zoom;
+            prStyle.height = padSideH;
+            prStyle.width = padRight + unit;
+            prStyle.top = padSideT;
+        },
+        stop(editor, sender, opts = {}) {
+            var opt = opts || {};
+            var state = opt.state || '';
+            var method = this.getOffsetMethod(state);
+            var canvas = editor.Canvas;
+            var offsetViewer = canvas[method](opts.view);
+            offsetViewer.style.opacity = 0;
+        }
+    };
+});
+define('skylark-grapejs/commands/view/SwitchVisibility',[],function () {
+    'use strict';
+    return {
+        run(ed) {
+            this.toggleVis(ed);
+        },
+        stop(ed) {
+            this.toggleVis(ed, 0);
+        },
+        toggleVis(ed, active = 1) {
+            const method = active ? 'add' : 'remove';
+            ed.Canvas.getFrames().forEach(frame => {
+                frame.view.getBody().classList[method](`${ this.ppfx }dashed`);
+            });
+        }
+    };
 });
 define('skylark-grapejs/commands/index',[
     'skylark-underscore',
     './view/CommandAbstract',
     './config/config',
-    '../../dom_components/model/Component'
-], function (a, CommandAbstract, defaults, b) {
+    '../dom_components/model/Component',
+
+    './view/CanvasClear',
+    './view/CanvasMove',
+
+    './view/ComponentDelete',
+    './view/ComponentDrag',
+    './view/ComponentEnter',
+    './view/ComponentExit',
+    './view/ComponentNext',
+    './view/ComponentPrev',
+    './view/ComponentStyleClear',
+
+    './view/CopyComponent',
+    './view/DeleteComponent',
+  
+    './view/ExportTemplate',
+
+    './view/Fullscreen',
+
+    './view/MoveComponent',
+
+    './view/OpenLayers',
+    './view/OpenStyleManager',
+    './view/OpenTraitManager',
+    './view/OpenBlocks',
+    './view/OpenAssets',
+ 
+    './view/PasteComponent',
+    './view/Preview',
+
+    './view/Resize',
+
+    './view/SelectComponent',
+    './view/SelectPosition',
+
+    './view/ShowOffset',
+    './view/SwitchVisibility'
+], function (
+    a, 
+    CommandAbstract, 
+    defaults, 
+    b,
+
+    ViewCanvasClear,
+    ViewCanvasMove,
+
+    ViewComponentDelete,
+    ViewComponentDrag,
+    ViewComponentEnter,
+    ViewComponentExit,
+    ViewComponentNext,
+    ViewComponentPrev,
+    ViewComponentStyleClear,
+
+    ViewCopyComponent,
+    ViewDeleteComponent,
+  
+    ViewExportTemplate,
+
+    ViewFullscreen,
+
+    ViewMoveComponent,
+
+    ViewOpenLayers,
+    ViewOpenStyleManager,
+    ViewOpenTraitManager,
+    ViewOpenBlocks,
+    ViewOpenAssets,
+ 
+    ViewPasteComponent,
+    ViewPreview,
+
+    ViewResize,
+
+    ViewSelectComponent,
+    ViewSelectPosition,
+
+    ViewShowOffset,
+    ViewSwitchVisibility  
+) {
     'use strict';
     return () => {
         let em;
@@ -53348,112 +51833,146 @@ define('skylark-grapejs/commands/index',[
             [
                 'preview',
                 'Preview',
-                'preview'
+                'preview',
+                ViewPreview
             ],
             [
                 'resize',
                 'Resize',
-                'resize'
+                'resize',
+                ViewResize
             ],
             [
                 'fullscreen',
                 'Fullscreen',
-                'fullscreen'
+                'fullscreen',
+                ViewFullscreen
             ],
             [
                 'copy',
-                'CopyComponent'
+                'CopyComponent',
+                '',
+                ViewCopyComponent
             ],
             [
                 'paste',
-                'PasteComponent'
+                'PasteComponent',
+                '',
+                ViewPasteComponent
             ],
             [
                 'canvas-move',
-                'CanvasMove'
+                'CanvasMove',
+                '',
+                ViewCanvasMove
             ],
             [
                 'canvas-clear',
-                'CanvasClear'
+                'CanvasClear',
+                '',
+                ViewCanvasClear
             ],
             [
                 'open-code',
                 'ExportTemplate',
-                'export-template'
+                'export-template',
+                ViewExportTemplate
             ],
             [
                 'open-layers',
                 'OpenLayers',
-                'open-layers'
+                'open-layers',
+                ViewOpenLayers
             ],
             [
                 'open-styles',
                 'OpenStyleManager',
-                'open-sm'
+                'open-sm',
+                ViewOpenStyleManager
             ],
             [
                 'open-traits',
                 'OpenTraitManager',
-                'open-tm'
+                'open-tm',
+                ViewOpenTraitManager
             ],
             [
                 'open-blocks',
                 'OpenBlocks',
-                'open-blocks'
+                'open-blocks',
+                ViewOpenBlocks
             ],
             [
                 'open-assets',
                 'OpenAssets',
-                'open-assets'
+                'open-assets',
+                ViewOpenAssets
             ],
             [
                 'component-select',
                 'SelectComponent',
-                'select-comp'
+                'select-comp',
+                ViewSelectComponent
             ],
             [
                 'component-outline',
                 'SwitchVisibility',
-                'sw-visibility'
+                'sw-visibility',
+                ViewSwitchVisibility
             ],
             [
                 'component-offset',
                 'ShowOffset',
-                'show-offset'
+                'show-offset',
+                ViewShowOffset
             ],
             [
                 'component-move',
                 'MoveComponent',
-                'move-comp'
+                'move-comp',
+                ViewMoveComponent
             ],
             [
                 'component-next',
-                'ComponentNext'
+                'ComponentNext',
+                '',
+                ViewComponentNext
             ],
             [
                 'component-prev',
-                'ComponentPrev'
+                'ComponentPrev',
+                '',
+                ViewComponentPrev
             ],
             [
                 'component-enter',
-                'ComponentEnter'
+                'ComponentEnter',
+                '',
+                ViewComponentEnter
             ],
             [
                 'component-exit',
                 'ComponentExit',
-                'select-parent'
+                'select-parent',
+                ViewComponentExit
             ],
             [
                 'component-delete',
-                'ComponentDelete'
+                'ComponentDelete',
+                '',
+                ViewComponentDelete
             ],
             [
                 'component-style-clear',
-                'ComponentStyleClear'
+                'ComponentStyleClear',
+                '',
+                ViewComponentStyleClear
             ],
             [
                 'component-drag',
-                'ComponentDrag'
+                'ComponentDrag',
+                '',
+                ViewComponentDrag
             ]
         ];
         const add = function (id, obj) {
@@ -53557,7 +52076,7 @@ define('skylark-grapejs/commands/index',[
                 defaultCommands['core:redo'] = e => e.UndoManager.redo();
                 commandsDef.forEach(item => {
                     const oldCmd = item[2];
-                    const cmd = require(`./view/${ item[1] }`).default;
+                    const cmd = item[3]; //require(`./view/${ item[1] }`).default; // modified by lwf
                     const cmdName = `core:${ item[0] }`;
                     defaultCommands[cmdName] = cmd;
                     if (oldCmd) {
@@ -53919,7 +52438,7 @@ define('skylark-grapejs/block_manager/view/CategoryView',[
         render() {
             const {em, el, $el, model} = this;
             const label = em.t(`blockManager.categories.${ model.id }`) || model.get('label');
-            el.innerHTML = this.undefined({
+            el.innerHTML = this.template({
                 pfx: this.pfx,
                 label
             });
@@ -54185,7 +52704,7 @@ define('skylark-grapejs/block_manager/index',[
     };
 });
 define('skylark-grapejs/editor/model/Editor',[
-    "skylark-langx",
+    "skylark-langx/langx",
     'skylark-underscore',
     'skylark-jquery',
     'skylark-backbone',
@@ -54364,7 +52883,7 @@ define('skylark-grapejs/editor/model/Editor',[
         loadModule(moduleName) {
             const {config} = this;
             const Module = moduleName.default || moduleName;
-            const Mod = new Module();
+            const Mod =  Module(); // new Module() modified by lwf
             const name = Mod.name.charAt(0).toLowerCase() + Mod.name.slice(1);
             const cfgParent = !_.isUndefined(config[name]) ? config[name] : config[Mod.name];
             const cfg = cfgParent || {};
@@ -54446,7 +52965,7 @@ define('skylark-grapejs/editor/model/Editor',[
             const model = b.getModel(el, $);
             const models = _.isArray(model) ? model : [model];
             models.forEach(model => {
-                if (this.get('selected').undefined(model)) {
+                if (this.get('selected').contains(model)) {
                     this.removeSelected(model, opts);
                 } else {
                     this.addSelected(model, opts);
@@ -54744,7 +53263,7 @@ define('skylark-grapejs/editor/view/EditorView',[
     });
 });
 define('skylark-grapejs/editor/index',[
-    "skylark-langx",
+    "skylark-langx/langx",
     'skylark-jquery',
     './config/config',
     './model/Editor',
@@ -54989,10 +53508,10 @@ define('skylark-grapejs/plugin_manager/config/config',[],function () {
 });
 define('skylark-grapejs/plugin_manager/index',['./config/config'], function (defaults) {
     'use strict';
+
     return config => {
-        var c = config || {};
         for (var name in defaults) {
-            if (!(name in c))
+            if (!(name in defaults))
                 c[name] = defaults[name];
         }
         var plugins = {};
@@ -55012,6 +53531,7 @@ define('skylark-grapejs/plugin_manager/index',['./config/config'], function (def
             }
         };
     };
+
 });
 define('skylark-grapejs/main',[
     "skylark-langx/langx",
@@ -55020,10 +53540,17 @@ define('skylark-grapejs/main',[
     'skylark-underscore',
     './utils/polyfills',
     './plugin_manager/index'
-], function (langx,$, Editor, _, polyfills, PluginManager) {
+], function (
+    langx,
+    $, 
+    startEditor, 
+    _, 
+    polyfills, 
+    pluginsInit
+) {
     'use strict';
     polyfills();
-    const plugins = new PluginManager();
+    const plugins = pluginsInit();
     const editors = [];
     const defaultConfig = {
         autorender: 1,
@@ -55044,7 +53571,7 @@ define('skylark-grapejs/main',[
                 config
             );
             config.el = _.isElement(els) ? els : document.querySelector(els);
-            const editor = new Editor(config).init();
+            const editor = startEditor(config).init();
             config.plugins.forEach(pluginId => {
                 let plugin = plugins.get(pluginId);
                 const plgOptions = config.pluginsOpts[pluginId] || {};

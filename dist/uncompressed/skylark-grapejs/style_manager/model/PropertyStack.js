@@ -2,16 +2,20 @@ define([
     "skylark-langx/langx",
     './PropertyComposite',
     './Layers'
-], function (langx,Property, Layers) {
+], function (
+    langx,
+    Property, 
+    Layers
+) {
     'use strict';
     return Property.extend({
-        defaults: langx.mixin({},
-            ...Property.prototype.defaults,{
+        defaults: {
+            ...Property.prototype.defaults,
             layers: [],
             layerSeparator: ', ',
             prepend: 0,
             preview: 0
-        }),
+        },
         initialize(props = {}, opts = {}) {
             Property.callParentInit(Property, this, props, opts);
             const layers = this.get('layers');

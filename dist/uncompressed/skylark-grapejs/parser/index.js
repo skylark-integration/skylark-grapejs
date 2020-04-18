@@ -17,10 +17,10 @@ define([
                 return conf;
             },
             init(config = {}) {
-                conf = langx.mixin({},defaults,config);
+                conf = {...defaults,...config};
                 conf.Parser = this;
-                pHtml = new parserHtml(conf);
-                pCss = new parserCss(conf);
+                pHtml =  parserHtml(conf);  // modified by lwf // new parserHtml(conf)
+                pCss = parserCss(conf); // modified by lwf  // new parserCss
                 this.em = conf.em;
                 this.parserCss = pCss;
                 this.parserHtml = pHtml;

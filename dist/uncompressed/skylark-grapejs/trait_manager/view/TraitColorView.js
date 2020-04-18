@@ -1,6 +1,6 @@
 define([
     './TraitView',
-    'domain_abstract/ui/InputColor'
+    '../../domain_abstract/ui/InputColor'
 ], function (TraitView, InputColor) {
     'use strict';
     return TraitView.extend({

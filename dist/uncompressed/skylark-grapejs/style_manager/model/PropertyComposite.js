@@ -1,9 +1,12 @@
 define([
     "skylark-langx/langx",
     './Property'
-], function (langx,Property) {
+], function (
+    langx,
+    Property
+) {
     'use strict';
-    return Property.extend({
+    var PropertyComposite = Property.extend({
         defaults: {
             ...Property.prototype.defaults,
             detached: 0,
@@ -13,8 +16,8 @@ define([
         initialize(props = {}, opts = {}) {
             Property.callParentInit(Property, this, props, opts);
             const properties = this.get('properties') || [];
-            const Properties = require('./Properties').default;
-            this.set('properties', new Properties(properties));
+            //const Properties = require('./Properties').default; // modified by lwf
+            this.set('properties', new PropertyComposite.Properties(properties));
             this.listenTo(this, 'change:value', this.updateValues);
             Property.callInit(this, props, opts);
         },
@@ -52,4 +55,6 @@ define([
             return this.get('properties').at(index);
         }
     });
+
+    return PropertyComposite;
 });

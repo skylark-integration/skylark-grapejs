@@ -1,5 +1,5 @@
 define([
-    "skylark-langx",
+    "skylark-langx/langx",
     'skylark-jquery',
     './config/config',
     './model/Editor',

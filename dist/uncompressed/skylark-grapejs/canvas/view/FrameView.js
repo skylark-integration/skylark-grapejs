@@ -17,10 +17,10 @@ define([
         initialize(o) {
             _.bindAll(this, 'updateClientY', 'stopAutoscroll', 'autoscroll', '_emitUpdate');
             const {model, el} = this;
-            this.config = langx.mixin({},
-                ...o.config ,{
+            this.config = {
+                ...o.config ,
                 frameView: this
-            });
+            };
             this.ppfx = this.config.pStylePrefix || '';
             this.em = this.config.em;
             this.listenTo(model, 'change:head', this.updateHead);
