@@ -1,10 +1,10 @@
 define([
+    'skylark-langx',
     'skylark-backbone',
-    'skylark-underscore',
     '../../utils/mixins',
     '../../utils/dom',
     './SectorView'
-], function (Backbone, a, b, c, SectorView) {
+], function (langx,Backbone, b, c, SectorView) {
     'use strict';
     const helperCls = 'hc-state';
     return Backbone.View.extend({
@@ -15,7 +15,7 @@ define([
             this.target = o.target || {};
             this.config = config;
             const target = {};
-            a.extend(target, Backbone.Events);
+            langx.extend(target, Backbone.Events);
             const body = document.body;
             const dummy = document.createElement(`el-${ new Date().getTime() }`);
             body.appendChild(dummy);
@@ -82,12 +82,12 @@ define([
         },
         setTarget(target, opts = {}) {
             const em = this.target;
-            const trgs = a.isArray(target) ? target : [target];
+            const trgs = langx.isArray(target) ? target : [target];
             const {targetIsClass, stylable} = opts;
             const models = [];
             trgs.forEach(target => {
                 let model = target;
-                if (a.isString(target)) {
+                if (langx.isString(target)) {
                     let rule;
                     const rules = em.get('CssComposer').getAll();
                     if (targetIsClass) {

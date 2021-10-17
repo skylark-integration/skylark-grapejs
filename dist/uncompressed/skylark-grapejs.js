@@ -75,7 +75,7 @@
   factory(define,require);
 
   if (!isAmd) {
-    var skylarkjs = require("skylark-langx/skylark");
+    var skylarkjs = require("skylark-langx-ns");
 
     if (isCmd) {
       module.exports = skylarkjs;
@@ -10004,12 +10004,12 @@ define('skylark-grapejs/style_manager/view/SectorView',[
     });
 });
 define('skylark-grapejs/style_manager/view/SectorsView',[
+    'skylark-langx',
     'skylark-backbone',
-    'skylark-underscore',
     '../../utils/mixins',
     '../../utils/dom',
     './SectorView'
-], function (Backbone, a, b, c, SectorView) {
+], function (langx,Backbone, b, c, SectorView) {
     'use strict';
     const helperCls = 'hc-state';
     return Backbone.View.extend({
@@ -10020,7 +10020,7 @@ define('skylark-grapejs/style_manager/view/SectorsView',[
             this.target = o.target || {};
             this.config = config;
             const target = {};
-            a.extend(target, Backbone.Events);
+            langx.extend(target, Backbone.Events);
             const body = document.body;
             const dummy = document.createElement(`el-${ new Date().getTime() }`);
             body.appendChild(dummy);
@@ -10087,12 +10087,12 @@ define('skylark-grapejs/style_manager/view/SectorsView',[
         },
         setTarget(target, opts = {}) {
             const em = this.target;
-            const trgs = a.isArray(target) ? target : [target];
+            const trgs = langx.isArray(target) ? target : [target];
             const {targetIsClass, stylable} = opts;
             const models = [];
             trgs.forEach(target => {
                 let model = target;
-                if (a.isString(target)) {
+                if (langx.isString(target)) {
                     let rule;
                     const rules = em.get('CssComposer').getAll();
                     if (targetIsClass) {
@@ -10617,7 +10617,7 @@ define('skylark-grapejs/code_manager/model/JsGenerator',[
 // Distributed under an MIT license: https://codemirror.net/LICENSE
 
 define('skylark-codemirror/mode/xml/xml',["../../CodeMirror"], function(CodeMirror) {
-
+"use strict";
 
 var htmlConfig = {
   autoSelfClosers: {'area': true, 'base': true, 'br': true, 'col': true, 'command': true,
@@ -11013,7 +11013,7 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
 // Distributed under an MIT license: https://codemirror.net/LICENSE
 
 define('skylark-codemirror/mode/javascript/javascript',["../../CodeMirror"], function(CodeMirror) {
-
+"use strict";
 
 CodeMirror.defineMode("javascript", function(config, parserConfig) {
   var indentUnit = config.indentUnit;
@@ -11927,7 +11927,7 @@ CodeMirror.defineMIME("application/typescript", { name: "javascript", typescript
 // Distributed under an MIT license: https://codemirror.net/LICENSE
 
 define('skylark-codemirror/mode/css/css',["../../CodeMirror"], function(CodeMirror) {
-
+"use strict";
 
 CodeMirror.defineMode("css", function(config, parserConfig) {
   var inline = parserConfig.inline
@@ -13745,7 +13745,9 @@ define('skylark-grapejs/panels/view/PanelsView',[
             const $el = this.$el;
             const frag = document.createDocumentFragment();
             $el.empty();
-            this.collection.each(model => this.addToCollection(model, frag));
+            this.collection.each(
+                model => this.addToCollection(model, frag)
+            );
             $el.append(frag);
             $el.attr('class', this.className);
             return this;
